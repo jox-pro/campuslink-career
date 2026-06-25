@@ -1,27 +1,36 @@
-# Dependencies
-node_modules/
+# Maven
+target/
+!.mvn/wrapper/maven-wrapper.jar
 
-# Build output
-public/bundle.js
-public/bundle.js.map
+# Java
+*.class
+*.jar
+*.war
+*.ear
+*.log
 
-# Environment
-.env
-.env.local
+# Database config (sensitive)
+src/main/resources/db.properties
+
+# IDE
+.idea/
+*.iml
+*.iws
+*.ipr
+.eclipse/
+.settings/
+.project
+.classpath
+.factorypath
 
 # OS
 .DS_Store
 Thumbs.db
-
-# IDE
-.vscode/
-.idea/
+*.tmp
 *.swp
-*.swo
 
-# Logs
-*.log
-npm-debug.log*
-
-# Bun
-bun.lockb
+# Old Bun/Node stuff
+node_modules/
+bun.lock
+package.json
+package-lock.json

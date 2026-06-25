@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.control.*?>
+<?import javafx.geometry.Insets?>
+
+<ScrollPane fitToWidth="true"
+            xmlns="http://javafx.com/javafx/17"
+            xmlns:fx="http://javafx.com/fxml/1"
+            fx:controller="com.campuslink.controllers.InternshipController">
+
+    <VBox spacing="16" styleClass="content-area">
+        <Label fx:id="formTitle" text="Post an Internship" styleClass="page-title"/>
+
+        <VBox styleClass="section-card" spacing="12">
+            <Label text="Internship Details"
+                   style="-fx-font-size: 16px; -fx-font-weight: bold; -fx-text-fill: #1565C0;"/>
+            <Separator/>
+
+            <GridPane hgap="16" vgap="10">
+                <Label text="Internship Title *" styleClass="form-label" GridPane.columnIndex="0" GridPane.rowIndex="0"/>
+                <TextField fx:id="fieldTitle" promptText="e.g. Data Science Intern"
+                           GridPane.columnIndex="1" GridPane.rowIndex="0" minWidth="300"/>
+
+                <Label text="Description" styleClass="form-label" GridPane.columnIndex="0" GridPane.rowIndex="1"/>
+                <TextArea fx:id="fieldDescription" promptText="Internship description..."
+                          GridPane.columnIndex="1" GridPane.rowIndex="1" prefRowCount="4" minWidth="300"/>
+
+                <Label text="Requirements" styleClass="form-label" GridPane.columnIndex="0" GridPane.rowIndex="2"/>
+                <TextArea fx:id="fieldRequirements" promptText="Required skills..."
+                          GridPane.columnIndex="1" GridPane.rowIndex="2" prefRowCount="3" minWidth="300"/>
+
+                <Label text="Deadline" styleClass="form-label" GridPane.columnIndex="0" GridPane.rowIndex="3"/>
+                <DatePicker fx:id="fieldDeadline" GridPane.columnIndex="1" GridPane.rowIndex="3"/>
+            </GridPane>
+
+            <Label fx:id="formMessage" wrapText="true" visible="false" managed="false"/>
+
+            <HBox spacing="10">
+                <Button fx:id="btnSave" text="Save Internship" styleClass="btn-primary" onAction="#handleSave"/>
+                <Button text="Cancel" styleClass="btn-secondary" onAction="#handleCancel"/>
+            </HBox>
+        </VBox>
+    </VBox>
+
+</ScrollPane>

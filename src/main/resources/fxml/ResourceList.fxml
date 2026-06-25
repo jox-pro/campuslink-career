@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.control.*?>
+<?import javafx.geometry.Insets?>
+
+<VBox xmlns="http://javafx.com/javafx/17"
+      xmlns:fx="http://javafx.com/fxml/1"
+      fx:controller="com.campuslink.controllers.ResourceController"
+      spacing="16" styleClass="content-area">
+
+    <Label text="Career Resources" styleClass="page-title"/>
+
+    <HBox spacing="10" alignment="CENTER_LEFT">
+        <Region HBox.hgrow="ALWAYS"/>
+        <Button fx:id="btnAdd" text="Add Resource" styleClass="btn-success" onAction="#handleAdd"/>
+        <Button fx:id="btnDelete" text="Delete" styleClass="btn-danger" onAction="#handleDelete"/>
+        <Button text="Open / Download" styleClass="btn-warning" onAction="#handleOpen"/>
+        <Button text="Refresh" styleClass="btn-secondary" onAction="#handleRefresh"/>
+    </HBox>
+
+    <TableView fx:id="tableView" VBox.vgrow="ALWAYS" styleClass="section-card">
+        <columns>
+            <TableColumn fx:id="colId" text="ID" prefWidth="60"/>
+            <TableColumn fx:id="colTitle" text="Title" prefWidth="200"/>
+            <TableColumn fx:id="colDescription" text="Description" prefWidth="300"/>
+            <TableColumn fx:id="colFilePath" text="File Path" prefWidth="250"/>
+            <TableColumn fx:id="colUploaded" text="Uploaded" prefWidth="160"/>
+        </columns>
+        <placeholder><Label text="No resources available."/></placeholder>
+    </TableView>
+
+    <Label fx:id="statusLabel" styleClass="page-subtitle"/>
+
+</VBox>

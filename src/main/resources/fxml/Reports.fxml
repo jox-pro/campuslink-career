@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.control.*?>
+<?import javafx.geometry.Insets?>
+
+<VBox xmlns="http://javafx.com/javafx/17"
+      xmlns:fx="http://javafx.com/fxml/1"
+      fx:controller="com.campuslink.controllers.ReportController"
+      spacing="20" styleClass="content-area">
+
+    <Label text="Reports &amp; Statistics" styleClass="page-title"/>
+
+    <!-- Summary cards -->
+    <HBox spacing="16">
+        <VBox styleClass="stat-card, stat-card-blue" spacing="6" minWidth="150">
+            <Label fx:id="lblStudents" text="0" styleClass="stat-card-value"/>
+            <Label text="Students" styleClass="stat-card-label"/>
+        </VBox>
+        <VBox styleClass="stat-card, stat-card-green" spacing="6" minWidth="150">
+            <Label fx:id="lblEmployers" text="0" styleClass="stat-card-value"/>
+            <Label text="Employers" styleClass="stat-card-label"/>
+        </VBox>
+        <VBox styleClass="stat-card, stat-card-orange" spacing="6" minWidth="150">
+            <Label fx:id="lblJobs" text="0" styleClass="stat-card-value"/>
+            <Label text="Jobs" styleClass="stat-card-label"/>
+        </VBox>
+        <VBox styleClass="stat-card, stat-card-purple" spacing="6" minWidth="150">
+            <Label fx:id="lblInternships" text="0" styleClass="stat-card-value"/>
+            <Label text="Internships" styleClass="stat-card-label"/>
+        </VBox>
+    </HBox>
+
+    <HBox spacing="16">
+        <VBox styleClass="stat-card, stat-card-blue" spacing="6" minWidth="150">
+            <Label fx:id="lblApplications" text="0" styleClass="stat-card-value"/>
+            <Label text="Total Applications" styleClass="stat-card-label"/>
+        </VBox>
+        <VBox styleClass="stat-card, stat-card-orange" spacing="6" minWidth="150">
+            <Label fx:id="lblPending" text="0" styleClass="stat-card-value"/>
+            <Label text="Pending" styleClass="stat-card-label"/>
+        </VBox>
+        <VBox styleClass="stat-card, stat-card-green" spacing="6" minWidth="150">
+            <Label fx:id="lblAccepted" text="0" styleClass="stat-card-value"/>
+            <Label text="Accepted" styleClass="stat-card-label"/>
+        </VBox>
+    </HBox>
+
+    <HBox spacing="10">
+        <Button text="Refresh Stats" styleClass="btn-primary" onAction="#handleRefresh"/>
+        <Button text="Export Report (TXT)" styleClass="btn-secondary" onAction="#handleExport"/>
+    </HBox>
+
+    <Label fx:id="exportStatus" styleClass="success-label"/>
+
+</VBox>

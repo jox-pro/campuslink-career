@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.control.*?>
+<?import javafx.geometry.Insets?>
+
+<ScrollPane fitToWidth="true"
+            xmlns="http://javafx.com/javafx/17"
+            xmlns:fx="http://javafx.com/fxml/1"
+            fx:controller="com.campuslink.controllers.RegisterController"
+            styleClass="login-container">
+
+    <VBox alignment="TOP_CENTER" spacing="10" style="-fx-padding: 30px;">
+
+        <Label text="Student Registration"
+               style="-fx-font-size: 24px; -fx-font-weight: bold; -fx-text-fill: #1565C0;"/>
+
+        <VBox styleClass="login-card" spacing="12" maxWidth="420">
+            <Label text="Account Details"
+                   style="-fx-font-size: 15px; -fx-font-weight: bold; -fx-text-fill: #424242;"/>
+            <Separator/>
+
+            <Label text="Username *" styleClass="form-label"/>
+            <TextField fx:id="usernameField" promptText="Choose a username"/>
+
+            <Label text="Password *" styleClass="form-label"/>
+            <PasswordField fx:id="passwordField" promptText="Min 6 characters"/>
+
+            <Label text="Confirm Password *" styleClass="form-label"/>
+            <PasswordField fx:id="confirmPasswordField" promptText="Repeat password"/>
+
+            <Label text="Personal Details"
+                   style="-fx-font-size: 15px; -fx-font-weight: bold; -fx-text-fill: #424242; -fx-padding: 8 0 0 0;"/>
+            <Separator/>
+
+            <Label text="Full Name *" styleClass="form-label"/>
+            <TextField fx:id="fullNameField" promptText="Your full name"/>
+
+            <Label text="Email *" styleClass="form-label"/>
+            <TextField fx:id="emailField" promptText="your@email.com"/>
+
+            <Label text="Phone" styleClass="form-label"/>
+            <TextField fx:id="phoneField" promptText="+1234567890"/>
+
+            <Label text="Course / Programme *" styleClass="form-label"/>
+            <TextField fx:id="courseField" promptText="e.g. Computer Science"/>
+
+            <Label text="Year of Study *" styleClass="form-label"/>
+            <TextField fx:id="yearField" promptText="1 - 7"/>
+
+            <Label fx:id="messageLabel" wrapText="true" visible="false" managed="false"/>
+
+            <Button text="Register" styleClass="btn-primary"
+                    onAction="#handleRegister" maxWidth="Infinity" defaultButton="true"/>
+
+            <Hyperlink text="Already have an account? Login"
+                       onAction="#handleBack"
+                       style="-fx-text-fill: #1565C0;"/>
+        </VBox>
+    </VBox>
+
+</ScrollPane>

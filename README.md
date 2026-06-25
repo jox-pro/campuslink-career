@@ -1,133 +1,96 @@
-# Bun 1.3.1 Boilerplate
+# CampusLink Career
 
-A **true Bun boilerplate** using Bun's native development server, bundler, and the revolutionary `console: true` feature that pipes frontend console logs to your backend terminal.
+A professional Java desktop application for university career management, connecting students, employers, and administrators in one centralized platform.
 
-## 🚀 Features
+## Features
 
-- ⚡️ **Bun 1.3.1** - Lightning-fast JavaScript runtime
-- 🔥 **Native Bun Dev Server** - No Vite, no Webpack, pure Bun
-- 🖥️ **`console: true`** - Frontend `console.log()` appears in backend terminal!
-- ⚛️ **React 19** - Latest React with hooks
-- 🎨 **TypeScript** - Full type safety
-- 📦 **Native Bun Bundler** - Fast builds with `Bun.build()`
-- 🔄 **Hot Reload** - File watching with automatic rebuilds
+### For Students
+- Register and manage profile
+- Browse job and internship listings
+- Apply for opportunities
+- Track application status
+- Access career resources (CV guides, interview tips)
 
-## 📦 Installation
+### For Employers
+- Post job and internship opportunities
+- Review applicants
+- Update application status (Pending, Reviewed, Shortlisted, Accepted, Rejected)
 
-```bash
-# Clone the repository
-git clone https://github.com/yueranyuan/bun-boilerplate.git
-cd bun-boilerplate
+### For Administrators
+- Manage all students, employers, and listings
+- Generate and export reports
+- Manage career resources
 
-# Install dependencies
-bun install
-```
+## Tech Stack
 
-## 🛠️ Usage
+| Technology | Purpose |
+|---|---|
+| Java 17 | Core language |
+| JavaFX 17 | Desktop GUI framework |
+| Maven | Build and dependency management |
+| MySQL 8 | Relational database |
+| JDBC | Database connectivity |
+| BCrypt (jBCrypt) | Password hashing |
 
-### Development
+## Getting Started
 
-```bash
-bun run dev
-```
+### Prerequisites
+- Java 17+
+- Maven 3.8+
+- MySQL 8.0+
 
-This starts the Bun dev server at `http://localhost:3000` with:
-- Hot reload watching `src/` directory
-- Frontend console logs piped to terminal
-- Source maps for debugging
+### Setup
 
-### Production Build
+1. Clone the repository:
+   ```bash
+   git clone https://github.com/jox-pro/campuslink-career
+   cd campuslink-career
+   ```
 
-```bash
-bun run build
-bun run start
-```
+2. Set up the database:
+   ```bash
+   mysql -u root -p < database/schema.sql
+   ```
 
-### Deploy to Subscribe.dev
+3. Configure database connection in `src/main/resources/db.properties`:
+   ```properties
+   db.url=jdbc:mysql://localhost:3306/campuslink_career?useSSL=false&serverTimezone=UTC
+   db.username=root
+   db.password=yourpassword
+   ```
 
-Deploy your app to production with one command:
+4. Run the application:
+   ```bash
+   mvn javafx:run
+   ```
 
-```bash
-# Build first
-bun run build
+### Default Credentials
 
-# Deploy (requires Subscribe.dev platform API key)
-SUBSCRIBE_DEV_PLATFORM_API_KEY=sdp_xxx bun run deploy
-```
+| Role | Username | Password |
+|---|---|---|
+| Admin | admin | admin123 |
+| Employer | techcorp | employer123 |
 
-Get your platform API key from [Subscribe.dev Dashboard](https://subscribe.dev)
-
-**What happens:**
-1. Creates a ZIP bundle from your `public/` folder
-2. Uploads to Subscribe.dev via S3
-3. Deploys with deterministic project-based URL
-4. Returns your live URL (e.g., `https://abc123.apps.subscribe.dev`)
-
-The deployment script (`deploy.ts`) uses the same robust S3 upload flow that the Subscribe.dev dashboard uses, ensuring proper file extraction and serving.
-
-## 🎯 The `console: true` Feature
-
-The killer feature of Bun 1.3.1 is `development: { console: true }` in `Bun.serve()`.
-
-**What it does:**
-- All `console.log()`, `console.error()`, etc. from your **frontend React code**
-- Automatically appear in your **backend terminal**
-- Perfect for debugging without opening browser DevTools
-
-**Example:**
-```typescript
-// In your React component
-console.log('Button clicked!', someData)
-```
-
-**You'll see in terminal:**
-```
-[Frontend] Button clicked! { count: 5 }
-```
-
-## 📁 Project Structure
+## Project Structure
 
 ```
-bun-boilerplate/
-├── src/
-│   ├── App.tsx          # Main React component
-│   └── index.tsx        # React entry point
-├── public/
-│   ├── index.html       # HTML template
-│   └── bundle.js        # Built bundle (generated)
-├── server.ts            # Bun dev server with console: true
-├── package.json
-└── tsconfig.json
+src/main/java/com/campuslink/
+├── app/            Application entry point (Main.java)
+├── controllers/    JavaFX UI controllers
+├── dao/            Database access objects
+├── models/         Data model POJOs
+├── services/       Business logic layer
+└── utils/          Database, crypto, validation utilities
+
+src/main/resources/
+├── fxml/           FXML view files
+├── css/            Stylesheets
+└── images/         Application icons
+
+database/
+└── schema.sql      MySQL setup script
 ```
 
-## 🔧 How It Works
+## License
 
-1. **`server.ts`** - Bun server with `Bun.serve()` and `development: { console: true }`
-2. **`Bun.build()`** - Native bundler compiles React/TypeScript to `public/bundle.js`
-3. **File watcher** - Watches `src/` and rebuilds on changes
-4. **Console proxying** - Frontend logs forwarded to backend terminal
-
-## 🆚 Why Not Vite?
-
-**Vite** is great, but it's not a "Bun boilerplate" - it's a Node.js tool that happens to work with Bun as a package manager.
-
-**This boilerplate** uses:
-- ✅ Bun's native dev server
-- ✅ Bun's native bundler
-- ✅ Bun-specific features like `console: true`
-- ✅ Pure Bun runtime (no Node.js dependencies)
-
-## 📚 Learn More
-
-- [Bun Documentation](https://bun.sh/docs)
-- [Bun.serve() API](https://bun.sh/docs/api/http)
-- [Bun.build() API](https://bun.sh/docs/bundler)
-- [React Documentation](https://react.dev)
-
-## 📝 License
-
-MIT
-
-## 🤝 Contributing
-
-Contributions welcome! This is meant to be a minimal, clean starting point for Bun + React projects.
+MIT License — University final-year project

@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.control.*?>
+<?import javafx.geometry.Insets?>
+
+<VBox xmlns="http://javafx.com/javafx/17"
+      xmlns:fx="http://javafx.com/fxml/1"
+      fx:controller="com.campuslink.controllers.InternshipController"
+      spacing="16" styleClass="content-area">
+
+    <Label fx:id="pageTitle" text="Internship Listings" styleClass="page-title"/>
+
+    <HBox spacing="10" alignment="CENTER_LEFT">
+        <TextField fx:id="searchField" promptText="Search internships..." styleClass="search-field"
+                   onAction="#handleSearch"/>
+        <Button text="Search" styleClass="btn-secondary" onAction="#handleSearch"/>
+        <Button text="Clear" styleClass="btn-secondary" onAction="#handleClearSearch"/>
+        <Region HBox.hgrow="ALWAYS"/>
+        <Button fx:id="btnApply" text="Apply" styleClass="btn-success" onAction="#handleApply"/>
+        <Button fx:id="btnAdd" text="Post Internship" styleClass="btn-success" onAction="#handleAdd"/>
+        <Button fx:id="btnEdit" text="Edit" styleClass="btn-warning" onAction="#handleEdit"/>
+        <Button fx:id="btnDelete" text="Delete" styleClass="btn-danger" onAction="#handleDelete"/>
+        <Button text="Refresh" styleClass="btn-secondary" onAction="#handleRefresh"/>
+    </HBox>
+
+    <TableView fx:id="tableView" VBox.vgrow="ALWAYS" styleClass="section-card">
+        <columns>
+            <TableColumn fx:id="colId" text="ID" prefWidth="60"/>
+            <TableColumn fx:id="colTitle" text="Title" prefWidth="200"/>
+            <TableColumn fx:id="colCompany" text="Company" prefWidth="160"/>
+            <TableColumn fx:id="colDeadline" text="Deadline" prefWidth="120"/>
+            <TableColumn fx:id="colDescription" text="Description" prefWidth="260"/>
+        </columns>
+        <placeholder><Label text="No internships found."/></placeholder>
+    </TableView>
+
+    <Label fx:id="statusLabel" styleClass="page-subtitle"/>
+
+</VBox>

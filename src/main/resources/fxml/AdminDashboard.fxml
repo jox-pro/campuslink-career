@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.control.*?>
+<?import javafx.geometry.Insets?>
+
+<BorderPane xmlns="http://javafx.com/javafx/17"
+            xmlns:fx="http://javafx.com/fxml/1"
+            fx:controller="com.campuslink.controllers.AdminDashboardController"
+            prefWidth="1100" prefHeight="700">
+
+    <!-- TOP HEADER -->
+    <top>
+        <HBox styleClass="header-bar" alignment="CENTER_LEFT" spacing="16">
+            <Label text="CampusLink Career — Admin" styleClass="header-title"/>
+            <Region HBox.hgrow="ALWAYS"/>
+            <Label fx:id="lblCurrentUser" styleClass="header-user"/>
+        </HBox>
+    </top>
+
+    <!-- LEFT SIDEBAR -->
+    <left>
+        <VBox styleClass="sidebar" minWidth="220">
+            <VBox styleClass="sidebar-header">
+                <Label text="Navigation" styleClass="sidebar-title"/>
+            </VBox>
+            <Button fx:id="btnDashboard" text="  Dashboard" styleClass="sidebar-btn"
+                    onAction="#handleDashboard" maxWidth="Infinity"/>
+            <Button fx:id="btnStudents" text="  Students" styleClass="sidebar-btn"
+                    onAction="#handleStudents" maxWidth="Infinity"/>
+            <Button fx:id="btnEmployers" text="  Employers" styleClass="sidebar-btn"
+                    onAction="#handleEmployers" maxWidth="Infinity"/>
+            <Button fx:id="btnJobs" text="  Jobs" styleClass="sidebar-btn"
+                    onAction="#handleJobs" maxWidth="Infinity"/>
+            <Button fx:id="btnInternships" text="  Internships" styleClass="sidebar-btn"
+                    onAction="#handleInternships" maxWidth="Infinity"/>
+            <Button fx:id="btnResources" text="  Resources" styleClass="sidebar-btn"
+                    onAction="#handleResources" maxWidth="Infinity"/>
+            <Button fx:id="btnReports" text="  Reports" styleClass="sidebar-btn"
+                    onAction="#handleReports" maxWidth="Infinity"/>
+            <Region VBox.vgrow="ALWAYS"/>
+            <Button text="  Logout" styleClass="sidebar-btn-logout"
+                    onAction="#handleLogout" maxWidth="Infinity"/>
+        </VBox>
+    </left>
+
+    <!-- CENTER CONTENT -->
+    <center>
+        <StackPane fx:id="contentArea" styleClass="content-area"/>
+    </center>
+
+</BorderPane>

@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.control.*?>
+<?import javafx.geometry.Insets?>
+
+<VBox xmlns="http://javafx.com/javafx/17"
+      xmlns:fx="http://javafx.com/fxml/1"
+      fx:controller="com.campuslink.controllers.ApplicationController"
+      spacing="16" styleClass="content-area">
+
+    <Label fx:id="pageTitle" text="Applications" styleClass="page-title"/>
+
+    <HBox spacing="10" alignment="CENTER_LEFT">
+        <Region HBox.hgrow="ALWAYS"/>
+        <Label text="Update Status:" styleClass="form-label"/>
+        <ComboBox fx:id="statusCombo" promptText="Select status"/>
+        <Button text="Update Status" styleClass="btn-warning" onAction="#handleUpdateStatus"/>
+        <Button fx:id="btnWithdraw" text="Withdraw" styleClass="btn-danger" onAction="#handleWithdraw"/>
+        <Button text="Refresh" styleClass="btn-secondary" onAction="#handleRefresh"/>
+    </HBox>
+
+    <TableView fx:id="tableView" VBox.vgrow="ALWAYS" styleClass="section-card">
+        <columns>
+            <TableColumn fx:id="colId" text="ID" prefWidth="60"/>
+            <TableColumn fx:id="colStudent" text="Student" prefWidth="160"/>
+            <TableColumn fx:id="colOpportunity" text="Position" prefWidth="200"/>
+            <TableColumn fx:id="colType" text="Type" prefWidth="100"/>
+            <TableColumn fx:id="colDate" text="Applied On" prefWidth="120"/>
+            <TableColumn fx:id="colStatus" text="Status" prefWidth="120"/>
+            <TableColumn fx:id="colCompany" text="Company" prefWidth="150"/>
+        </columns>
+        <placeholder><Label text="No applications found."/></placeholder>
+    </TableView>
+
+    <Label fx:id="statusLabel" styleClass="page-subtitle"/>
+
+</VBox>

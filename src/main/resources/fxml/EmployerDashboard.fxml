@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.control.*?>
+<?import javafx.geometry.Insets?>
+
+<BorderPane xmlns="http://javafx.com/javafx/17"
+            xmlns:fx="http://javafx.com/fxml/1"
+            fx:controller="com.campuslink.controllers.EmployerDashboardController"
+            prefWidth="1100" prefHeight="700">
+
+    <!-- TOP HEADER -->
+    <top>
+        <HBox styleClass="header-bar" alignment="CENTER_LEFT" spacing="16">
+            <Label text="CampusLink Career — Employer Portal" styleClass="header-title"/>
+            <Region HBox.hgrow="ALWAYS"/>
+            <Label fx:id="lblCurrentUser" styleClass="header-user"/>
+        </HBox>
+    </top>
+
+    <!-- LEFT SIDEBAR -->
+    <left>
+        <VBox styleClass="sidebar" minWidth="220">
+            <VBox styleClass="sidebar-header">
+                <Label text="Navigation" styleClass="sidebar-title"/>
+            </VBox>
+            <Button fx:id="btnPostJob" text="  Post a Job" styleClass="sidebar-btn"
+                    onAction="#handlePostJob" maxWidth="Infinity"/>
+            <Button fx:id="btnPostInternship" text="  Post Internship" styleClass="sidebar-btn"
+                    onAction="#handlePostInternship" maxWidth="Infinity"/>
+            <Button fx:id="btnMyJobs" text="  My Listings" styleClass="sidebar-btn"
+                    onAction="#handleMyJobs" maxWidth="Infinity"/>
+            <Button fx:id="btnApplicants" text="  View Applicants" styleClass="sidebar-btn"
+                    onAction="#handleApplicants" maxWidth="Infinity"/>
+            <Button fx:id="btnProfile" text="  My Profile" styleClass="sidebar-btn"
+                    onAction="#handleProfile" maxWidth="Infinity"/>
+            <Region VBox.vgrow="ALWAYS"/>
+            <Button text="  Logout" styleClass="sidebar-btn-logout"
+                    onAction="#handleLogout" maxWidth="Infinity"/>
+        </VBox>
+    </left>
+
+    <!-- CENTER CONTENT -->
+    <center>
+        <StackPane fx:id="contentArea" styleClass="content-area"/>
+    </center>
+
+</BorderPane>

@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.control.*?>
+<?import javafx.geometry.Insets?>
+
+<VBox xmlns="http://javafx.com/javafx/17"
+      xmlns:fx="http://javafx.com/fxml/1"
+      fx:controller="com.campuslink.controllers.AdminDashboardController"
+      spacing="24" styleClass="content-area">
+
+    <Label text="Dashboard Overview" styleClass="page-title"/>
+    <Label text="Welcome to CampusLink Career Management System" styleClass="page-subtitle"/>
+
+    <!-- Stats Row 1 -->
+    <HBox spacing="20">
+        <VBox styleClass="stat-card, stat-card-blue" spacing="8" minWidth="180">
+            <Label fx:id="lblStudentCount" text="0" styleClass="stat-card-value"/>
+            <Label text="Total Students" styleClass="stat-card-label"/>
+        </VBox>
+        <VBox styleClass="stat-card, stat-card-green" spacing="8" minWidth="180">
+            <Label fx:id="lblEmployerCount" text="0" styleClass="stat-card-value"/>
+            <Label text="Employers" styleClass="stat-card-label"/>
+        </VBox>
+        <VBox styleClass="stat-card, stat-card-orange" spacing="8" minWidth="180">
+            <Label fx:id="lblJobCount" text="0" styleClass="stat-card-value"/>
+            <Label text="Active Jobs" styleClass="stat-card-label"/>
+        </VBox>
+        <VBox styleClass="stat-card, stat-card-purple" spacing="8" minWidth="180">
+            <Label fx:id="lblApplicationCount" text="0" styleClass="stat-card-value"/>
+            <Label text="Applications" styleClass="stat-card-label"/>
+        </VBox>
+    </HBox>
+
+    <!-- Stats Row 2 -->
+    <HBox spacing="20">
+        <VBox styleClass="stat-card, stat-card-orange" spacing="8" minWidth="180">
+            <Label fx:id="lblInternshipCount" text="0" styleClass="stat-card-value"/>
+            <Label text="Internships" styleClass="stat-card-label"/>
+        </VBox>
+        <VBox styleClass="stat-card, stat-card-blue" spacing="8" minWidth="180">
+            <Label fx:id="lblPendingCount" text="0" styleClass="stat-card-value"/>
+            <Label text="Pending Reviews" styleClass="stat-card-label"/>
+        </VBox>
+        <VBox styleClass="stat-card, stat-card-green" spacing="8" minWidth="180">
+            <Label fx:id="lblAcceptedCount" text="0" styleClass="stat-card-value"/>
+            <Label text="Accepted" styleClass="stat-card-label"/>
+        </VBox>
+    </HBox>
+
+</VBox>
