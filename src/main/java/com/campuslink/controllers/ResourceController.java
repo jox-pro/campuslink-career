@@ -14,6 +14,9 @@ import javafx.stage.Stage;
 import java.awt.Desktop;
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.List;
 import java.util.Optional;
 
@@ -148,17 +151,25 @@ public class ResourceController {
             showAlert(Alert.AlertType.WARNING, "No File", "This resource has no file path."); return;
         }
 
-        File file = new File(path);
-        if (!file.exists()) {
+        Path baseDir = Paths.get(System.getProperty("user.home"), ".campuslink-career", "resources");
+        Path resolvedPath = Paths.get(path).normalize();
+        Path allowedBase = baseDir.toAbsolutePath().normalize();
+        if (!resolvedPath.startsWith(allowedBase)) {
+            showAlert(Alert.AlertType.WARNING, "Access Denied",
+                "Only files under the configured resource directory can be opened.");
+            return;
+        }
+
+        if (!Files.exists(resolvedPath) || !Files.isRegularFile(resolvedPath)) {
             showAlert(Alert.AlertType.WARNING, "File Not Found",
                 "File not found at: " + path + "\nPlease ensure the file exists."); return;
         }
 
         try {
             if (Desktop.isDesktopSupported()) {
-                Desktop.getDesktop().open(file);
+                Desktop.getDesktop().open(resolvedPath.toFile());
             } else {
-                showAlert(Alert.AlertType.INFORMATION, "File Path", "File path: " + file.getAbsolutePath());
+                showAlert(Alert.AlertType.INFORMATION, "File Path", "File path: " + resolvedPath.toAbsolutePath());
             }
         } catch (IOException e) {
             showAlert(Alert.AlertType.ERROR, "Error", "Cannot open file: " + e.getMessage());

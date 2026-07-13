@@ -83,14 +83,8 @@ CREATE TABLE IF NOT EXISTS resources (
     uploaded_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
--- Default admin user (password: admin123)
--- BCrypt hash of 'admin123'
-INSERT IGNORE INTO users (username, password, role) VALUES
-('admin', '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhWy', 'ADMIN');
-
--- Sample employer user (password: employer123)
-INSERT IGNORE INTO users (username, password, role) VALUES
-('techcorp', '$2a$10$8K1p/a0dL1LXMIgoEDFrwOfMQbLgtnOoKsWc.6U0YnpM4oLDdKEha', 'EMPLOYER');
+-- Seed users are intentionally disabled in the schema. Create them via the application after setting a secure password.
+-- Example: INSERT INTO users (username, password, role) VALUES ('admin', '<bcrypt-hash>', 'ADMIN');
 
 INSERT IGNORE INTO employers (user_id, company_name, contact_person, email, phone, address)
 VALUES (2, 'TechCorp Solutions', 'John Smith', 'hr@techcorp.com', '+1234567890', '123 Tech Street, Silicon Valley');

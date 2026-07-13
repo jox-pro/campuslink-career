@@ -52,12 +52,16 @@ A professional Java desktop application for university career management, connec
    mysql -u root -p < database/schema.sql
    ```
 
-3. Configure database connection in `src/main/resources/db.properties`:
+3. Copy the sample properties file and configure database connection through environment variables or the copied file:
+   ```bash
+   cp src/main/resources/db.properties.example src/main/resources/db.properties
+   ```
    ```properties
    db.url=jdbc:mysql://localhost:3306/campuslink_career?useSSL=false&serverTimezone=UTC
    db.username=root
    db.password=yourpassword
    ```
+   The application also reads the same settings from environment variables `DB_URL`, `DB_USERNAME`, and `DB_PASSWORD`.
 
 4. Run the application:
    ```bash
@@ -66,10 +70,7 @@ A professional Java desktop application for university career management, connec
 
 ### Default Credentials
 
-| Role | Username | Password |
-|---|---|---|
-| Admin | admin | admin123 |
-| Employer | techcorp | employer123 |
+Default seed credentials are no longer embedded in the repository. Create a secure admin account during first launch or through the database.
 
 ## Project Structure
 

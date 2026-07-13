@@ -1,0 +1,164 @@
+{
+  "tasks": [
+    {
+      "id": "001-upgrade-java-runtime",
+      "type": "upgrade",
+      "description": "Upgrade the Java runtime and Maven toolchain to a current supported LTS release",
+      "requirements": "Update the Java version in the Maven build and verify compilation, packaging, and runtime compatibility for the desktop application.",
+      "environmentConfiguration": null,
+      "skills": [
+        {
+          "name": "java-version-upgrade",
+          "location": "builtin"
+        }
+      ],
+      "successCriteria": {
+        "passBuild": "true",
+        "passUnitTests": "true"
+      }
+    },
+    {
+      "id": "002-containerize-and-deploy-readiness",
+      "type": "transform",
+      "description": "Add containerization and Azure deployment readiness",
+      "requirements": "Create a Dockerfile, define container-friendly runtime settings, and prepare the app for Azure Container Apps or App Service hosting.",
+      "environmentConfiguration": null,
+      "skills": [
+        {
+          "name": "migration-containerization",
+          "location": "builtin"
+        }
+      ],
+      "successCriteria": {
+        "passBuild": "true",
+        "passUnitTests": "true"
+      }
+    },
+    {
+      "id": "003-migrate-database-config",
+      "type": "transform",
+      "description": "Externalize database settings and plan Azure Database for MySQL migration",
+      "requirements": "Move database credentials and connection properties to environment-based configuration and document the migration path to Azure Database for MySQL.",
+      "environmentConfiguration": null,
+      "skills": [
+        {
+          "name": "migration-azure-mysql",
+          "location": "builtin"
+        }
+      ],
+      "successCriteria": {
+        "passBuild": "true",
+        "passUnitTests": "true"
+      }
+    },
+    {
+      "id": "004-replace-local-file-storage",
+      "type": "transform",
+      "description": "Replace local file-system usage with cloud-safe storage and configuration patterns",
+      "requirements": "Review report and resource handling flows, move persistent data to Azure Storage or equivalent, and avoid local file dependencies in cloud deployments.",
+      "environmentConfiguration": null,
+      "skills": [
+        {
+          "name": "migration-local-storage",
+          "location": "builtin"
+        }
+      ],
+      "successCriteria": {
+        "passBuild": "true",
+        "passUnitTests": "true"
+      }
+    },
+    {
+      "id": "005-remove-hardcoded-secrets",
+      "type": "security",
+      "description": "Remove hard-coded credentials and default passwords from code, schema, and documentation",
+      "requirements": "Remove seeded default credentials, replace them with generated secrets or environment variables, and update installation guidance to avoid exposing credentials.",
+      "environmentConfiguration": null,
+      "skills": [
+        {
+          "name": "security-secrets-management",
+          "location": "builtin"
+        }
+      ],
+      "successCriteria": {
+        "passBuild": "true",
+        "passUnitTests": "true"
+      }
+    },
+    {
+      "id": "006-add-authentication-audit-logging",
+      "type": "security",
+      "description": "Add authentication audit logging and security events for login activity",
+      "requirements": "Log successful and failed login attempts with sufficient context, without exposing secrets, and preserve a reviewable audit trail.",
+      "environmentConfiguration": null,
+      "skills": [
+        {
+          "name": "security-logging",
+          "location": "builtin"
+        }
+      ],
+      "successCriteria": {
+        "passBuild": "true",
+        "passUnitTests": "true"
+      }
+    },
+    {
+      "id": "007-harden-path-handling",
+      "type": "security",
+      "description": "Harden file and resource path handling to prevent traversal attacks",
+      "requirements": "Normalize resource paths, restrict them to approved locations, and reject traversal attempts before opening files.",
+      "environmentConfiguration": null,
+      "skills": [
+        {
+          "name": "security-path-validation",
+          "location": "builtin"
+        }
+      ],
+      "successCriteria": {
+        "passBuild": "true",
+        "passUnitTests": "true"
+      }
+    },
+    {
+      "id": "008-fix-concurrency-synchronization",
+      "type": "security",
+      "description": "Make shared singleton utilities thread-safe and remove unsafe synchronization patterns",
+      "requirements": "Protect SessionManager and DBConnection state with proper synchronization or immutable initialization so concurrent access is safe.",
+      "environmentConfiguration": null,
+      "skills": [
+        {
+          "name": "security-thread-safety",
+          "location": "builtin"
+        }
+      ],
+      "successCriteria": {
+        "passBuild": "true",
+        "passUnitTests": "true"
+      }
+    },
+    {
+      "id": "009-upgrade-vulnerable-dependencies",
+      "type": "security",
+      "description": "Resolve the reported JasperReports CVE vulnerabilities",
+      "requirements": "Upgrade JasperReports to a patched version that addresses the reported CVEs and verify the dependency tree is clean.",
+      "environmentConfiguration": null,
+      "skills": [
+        {
+          "name": "security-dependency-upgrade",
+          "location": "builtin"
+        }
+      ],
+      "successCriteria": {
+        "passBuild": "true",
+        "passUnitTests": "true"
+      }
+    }
+  ],
+  "metadata": {
+    "language": "java",
+    "planName": "campuslink-career-modernization",
+    "projectName": "campuslink-career",
+    "createdAt": "2026-07-11T20:30:00Z",
+    "version": "1.0"
+  }
+}

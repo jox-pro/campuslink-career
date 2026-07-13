@@ -2,6 +2,7 @@ package com.campuslink.services;
 
 import com.campuslink.dao.UserDAO;
 import com.campuslink.models.User;
+import com.campuslink.utils.AuditLogger;
 import com.campuslink.utils.PasswordUtil;
 import com.campuslink.utils.SessionManager;
 
@@ -10,11 +11,14 @@ public class AuthService {
 
     public User login(String username, String password) {
         if (username == null || username.trim().isEmpty() || password == null) return null;
-        User user = userDAO.findByUsername(username.trim());
+        String normalizedUsername = username.trim();
+        User user = userDAO.findByUsername(normalizedUsername);
         if (user != null && PasswordUtil.checkPassword(password, user.getPassword())) {
             SessionManager.getInstance().setCurrentUser(user);
+            AuditLogger.log("login", normalizedUsername, "success", "authenticated");
             return user;
         }
+        AuditLogger.log("login", normalizedUsername, "failure", "invalid credentials");
         return null;
     }
 
@@ -24,7 +28,11 @@ public class AuthService {
         user.setUsername(username.trim());
         user.setPassword(PasswordUtil.hashPassword(password));
         user.setRole(role);
-        if (userDAO.create(user)) return user;
+        if (userDAO.create(user)) {
+            AuditLogger.log("register", username.trim(), "success", "account-created");
+            return user;
+        }
+        AuditLogger.log("register", username != null ? username.trim() : "", "failure", "account-creation-failed");
         return null;
     }
 
