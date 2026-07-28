@@ -83,6 +83,17 @@ CREATE TABLE IF NOT EXISTS resources (
     uploaded_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
+-- Audit log: append-only. The application layer only ever INSERTs here —
+-- there is no UPDATE/DELETE path in AuditLogDAO by design.
+CREATE TABLE IF NOT EXISTS audit_log (
+    audit_id INT PRIMARY KEY AUTO_INCREMENT,
+    event_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    event VARCHAR(50) NOT NULL,
+    username VARCHAR(50),
+    outcome VARCHAR(20) NOT NULL,
+    details VARCHAR(255)
+);
+
 -- Seed users are intentionally disabled in the schema. Create them via the application after setting a secure password.
 -- Example: INSERT INTO users (username, password, role) VALUES ('admin', '<bcrypt-hash>', 'ADMIN');
 

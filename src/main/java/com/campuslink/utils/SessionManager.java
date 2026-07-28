@@ -29,6 +29,7 @@ public class SessionManager {
 
     public synchronized void logout() {
         currentUser = null;
-        DBConnection.getInstance().closeConnection();
+        // No shared connection to close anymore: AppDataSource hands out a fresh
+        // Connection per call, and every DAO closes its own via try-with-resources.
     }
 }

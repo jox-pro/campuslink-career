@@ -1,3 +1,10 @@
+# Copy this file to db.properties (same folder) and fill in real values.
+# db.properties is gitignored — never commit real credentials.
+#
+# Default XAMPP/MariaDB install: username=root, password=  (blank).
+# If using default XAMPP, delete the "change-me" placeholder below and
+# leave db.password empty.
+
 db.driver=com.mysql.cj.jdbc.Driver
 db.url=jdbc:mysql://localhost:3306/campuslink_career?useSSL=false&serverTimezone=UTC
 db.username=root

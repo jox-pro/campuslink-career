@@ -1,18 +1,37 @@
 package com.campuslink.dao;
 
 import com.campuslink.models.Job;
-import com.campuslink.utils.DBConnection;
+import com.campuslink.utils.AppDataSource;
+
+import javax.sql.DataSource;
 
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
 
 public class JobDAO {
-    private Connection getConn() { return DBConnection.getInstance().getConnection(); }
+    private final DataSource dataSource;
+
+    public JobDAO() {
+        this(AppDataSource.getInstance());
+    }
+
+    public JobDAO(DataSource dataSource) {
+        this.dataSource = dataSource;
+    }
+
+    private Connection getConn() {
+        try {
+            return dataSource.getConnection();
+        } catch (SQLException e) {
+            throw new RuntimeException("Database connection failed: " + e.getMessage(), e);
+        }
+    }
 
     public boolean create(Job job) {
         String sql = "INSERT INTO jobs (title, description, requirements, deadline, employer_id) VALUES (?, ?, ?, ?, ?)";
-        try (PreparedStatement ps = getConn().prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
+        try (Connection conn = getConn();
+             PreparedStatement ps = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
             ps.setString(1, job.getTitle());
             ps.setString(2, job.getDescription());
             ps.setString(3, job.getRequirements());
@@ -32,7 +51,8 @@ public class JobDAO {
     public Job findById(int jobId) {
         String sql = "SELECT j.*, e.company_name FROM jobs j " +
                      "LEFT JOIN employers e ON j.employer_id = e.employer_id WHERE j.job_id = ?";
-        try (PreparedStatement ps = getConn().prepareStatement(sql)) {
+        try (Connection conn = getConn();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setInt(1, jobId);
             try (ResultSet rs = ps.executeQuery()) {
                 if (rs.next()) return mapRow(rs);
@@ -45,7 +65,8 @@ public class JobDAO {
         List<Job> list = new ArrayList<>();
         String sql = "SELECT j.*, e.company_name FROM jobs j " +
                      "LEFT JOIN employers e ON j.employer_id = e.employer_id ORDER BY j.job_id DESC";
-        try (Statement st = getConn().createStatement();
+        try (Connection conn = getConn();
+             Statement st = conn.createStatement();
              ResultSet rs = st.executeQuery(sql)) {
             while (rs.next()) list.add(mapRow(rs));
         } catch (SQLException e) { System.err.println("JobDAO.findAll: " + e.getMessage()); }
@@ -56,7 +77,8 @@ public class JobDAO {
         List<Job> list = new ArrayList<>();
         String sql = "SELECT j.*, e.company_name FROM jobs j " +
                      "LEFT JOIN employers e ON j.employer_id = e.employer_id WHERE j.employer_id = ? ORDER BY j.job_id DESC";
-        try (PreparedStatement ps = getConn().prepareStatement(sql)) {
+        try (Connection conn = getConn();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setInt(1, employerId);
             try (ResultSet rs = ps.executeQuery()) {
                 while (rs.next()) list.add(mapRow(rs));
@@ -70,7 +92,8 @@ public class JobDAO {
         String sql = "SELECT j.*, e.company_name FROM jobs j " +
                      "LEFT JOIN employers e ON j.employer_id = e.employer_id " +
                      "WHERE j.deadline >= CURDATE() ORDER BY j.deadline ASC";
-        try (Statement st = getConn().createStatement();
+        try (Connection conn = getConn();
+             Statement st = conn.createStatement();
              ResultSet rs = st.executeQuery(sql)) {
             while (rs.next()) list.add(mapRow(rs));
         } catch (SQLException e) { System.err.println("JobDAO.findActive: " + e.getMessage()); }
@@ -79,7 +102,8 @@ public class JobDAO {
 
     public boolean update(Job job) {
         String sql = "UPDATE jobs SET title=?, description=?, requirements=?, deadline=?, employer_id=? WHERE job_id=?";
-        try (PreparedStatement ps = getConn().prepareStatement(sql)) {
+        try (Connection conn = getConn();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setString(1, job.getTitle());
             ps.setString(2, job.getDescription());
             ps.setString(3, job.getRequirements());
@@ -93,7 +117,8 @@ public class JobDAO {
 
     public boolean delete(int jobId) {
         String sql = "DELETE FROM jobs WHERE job_id=?";
-        try (PreparedStatement ps = getConn().prepareStatement(sql)) {
+        try (Connection conn = getConn();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setInt(1, jobId);
             return ps.executeUpdate() > 0;
         } catch (SQLException e) { System.err.println("JobDAO.delete: " + e.getMessage()); }
@@ -106,7 +131,8 @@ public class JobDAO {
                      "LEFT JOIN employers e ON j.employer_id = e.employer_id " +
                      "WHERE j.title LIKE ? OR j.description LIKE ? OR j.requirements LIKE ? ORDER BY j.job_id DESC";
         String pattern = "%" + keyword + "%";
-        try (PreparedStatement ps = getConn().prepareStatement(sql)) {
+        try (Connection conn = getConn();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setString(1, pattern);
             ps.setString(2, pattern);
             ps.setString(3, pattern);
@@ -119,7 +145,8 @@ public class JobDAO {
 
     public int count() {
         String sql = "SELECT COUNT(*) FROM jobs";
-        try (Statement st = getConn().createStatement();
+        try (Connection conn = getConn();
+             Statement st = conn.createStatement();
              ResultSet rs = st.executeQuery(sql)) {
             if (rs.next()) return rs.getInt(1);
         } catch (SQLException e) { System.err.println("JobDAO.count: " + e.getMessage()); }

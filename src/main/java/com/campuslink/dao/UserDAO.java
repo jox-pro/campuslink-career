@@ -1,18 +1,37 @@
 package com.campuslink.dao;
 
 import com.campuslink.models.User;
-import com.campuslink.utils.DBConnection;
+import com.campuslink.utils.AppDataSource;
+
+import javax.sql.DataSource;
 
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
 
 public class UserDAO {
-    private Connection getConn() { return DBConnection.getInstance().getConnection(); }
+    private final DataSource dataSource;
+
+    public UserDAO() {
+        this(AppDataSource.getInstance());
+    }
+
+    public UserDAO(DataSource dataSource) {
+        this.dataSource = dataSource;
+    }
+
+    private Connection getConn() {
+        try {
+            return dataSource.getConnection();
+        } catch (SQLException e) {
+            throw new RuntimeException("Database connection failed: " + e.getMessage(), e);
+        }
+    }
 
     public boolean create(User user) {
         String sql = "INSERT INTO users (username, password, role) VALUES (?, ?, ?)";
-        try (PreparedStatement ps = getConn().prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
+        try (Connection conn = getConn();
+             PreparedStatement ps = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
             ps.setString(1, user.getUsername());
             ps.setString(2, user.getPassword());
             ps.setString(3, user.getRole());
@@ -29,7 +48,8 @@ public class UserDAO {
 
     public User findById(int id) {
         String sql = "SELECT * FROM users WHERE id = ?";
-        try (PreparedStatement ps = getConn().prepareStatement(sql)) {
+        try (Connection conn = getConn();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setInt(1, id);
             try (ResultSet rs = ps.executeQuery()) {
                 if (rs.next()) return mapRow(rs);
@@ -40,7 +60,8 @@ public class UserDAO {
 
     public User findByUsername(String username) {
         String sql = "SELECT * FROM users WHERE username = ?";
-        try (PreparedStatement ps = getConn().prepareStatement(sql)) {
+        try (Connection conn = getConn();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setString(1, username);
             try (ResultSet rs = ps.executeQuery()) {
                 if (rs.next()) return mapRow(rs);
@@ -52,7 +73,8 @@ public class UserDAO {
     public List<User> findAll() {
         List<User> list = new ArrayList<>();
         String sql = "SELECT * FROM users ORDER BY id";
-        try (Statement st = getConn().createStatement();
+        try (Connection conn = getConn();
+             Statement st = conn.createStatement();
              ResultSet rs = st.executeQuery(sql)) {
             while (rs.next()) list.add(mapRow(rs));
         } catch (SQLException e) { System.err.println("UserDAO.findAll: " + e.getMessage()); }
@@ -61,7 +83,8 @@ public class UserDAO {
 
     public boolean update(User user) {
         String sql = "UPDATE users SET username=?, password=?, role=? WHERE id=?";
-        try (PreparedStatement ps = getConn().prepareStatement(sql)) {
+        try (Connection conn = getConn();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setString(1, user.getUsername());
             ps.setString(2, user.getPassword());
             ps.setString(3, user.getRole());
@@ -73,7 +96,8 @@ public class UserDAO {
 
     public boolean delete(int id) {
         String sql = "DELETE FROM users WHERE id=?";
-        try (PreparedStatement ps = getConn().prepareStatement(sql)) {
+        try (Connection conn = getConn();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setInt(1, id);
             return ps.executeUpdate() > 0;
         } catch (SQLException e) { System.err.println("UserDAO.delete: " + e.getMessage()); }
@@ -82,7 +106,8 @@ public class UserDAO {
 
     public int count() {
         String sql = "SELECT COUNT(*) FROM users";
-        try (Statement st = getConn().createStatement();
+        try (Connection conn = getConn();
+             Statement st = conn.createStatement();
              ResultSet rs = st.executeQuery(sql)) {
             if (rs.next()) return rs.getInt(1);
         } catch (SQLException e) { System.err.println("UserDAO.count: " + e.getMessage()); }

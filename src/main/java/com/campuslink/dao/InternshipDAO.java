@@ -1,18 +1,37 @@
 package com.campuslink.dao;
 
 import com.campuslink.models.Internship;
-import com.campuslink.utils.DBConnection;
+import com.campuslink.utils.AppDataSource;
+
+import javax.sql.DataSource;
 
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
 
 public class InternshipDAO {
-    private Connection getConn() { return DBConnection.getInstance().getConnection(); }
+    private final DataSource dataSource;
+
+    public InternshipDAO() {
+        this(AppDataSource.getInstance());
+    }
+
+    public InternshipDAO(DataSource dataSource) {
+        this.dataSource = dataSource;
+    }
+
+    private Connection getConn() {
+        try {
+            return dataSource.getConnection();
+        } catch (SQLException e) {
+            throw new RuntimeException("Database connection failed: " + e.getMessage(), e);
+        }
+    }
 
     public boolean create(Internship internship) {
         String sql = "INSERT INTO internships (title, description, requirements, deadline, employer_id) VALUES (?, ?, ?, ?, ?)";
-        try (PreparedStatement ps = getConn().prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
+        try (Connection conn = getConn();
+             PreparedStatement ps = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
             ps.setString(1, internship.getTitle());
             ps.setString(2, internship.getDescription());
             ps.setString(3, internship.getRequirements());
@@ -32,7 +51,8 @@ public class InternshipDAO {
     public Internship findById(int internshipId) {
         String sql = "SELECT i.*, e.company_name FROM internships i " +
                      "LEFT JOIN employers e ON i.employer_id = e.employer_id WHERE i.internship_id = ?";
-        try (PreparedStatement ps = getConn().prepareStatement(sql)) {
+        try (Connection conn = getConn();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setInt(1, internshipId);
             try (ResultSet rs = ps.executeQuery()) {
                 if (rs.next()) return mapRow(rs);
@@ -45,7 +65,8 @@ public class InternshipDAO {
         List<Internship> list = new ArrayList<>();
         String sql = "SELECT i.*, e.company_name FROM internships i " +
                      "LEFT JOIN employers e ON i.employer_id = e.employer_id ORDER BY i.internship_id DESC";
-        try (Statement st = getConn().createStatement();
+        try (Connection conn = getConn();
+             Statement st = conn.createStatement();
              ResultSet rs = st.executeQuery(sql)) {
             while (rs.next()) list.add(mapRow(rs));
         } catch (SQLException e) { System.err.println("InternshipDAO.findAll: " + e.getMessage()); }
@@ -56,7 +77,8 @@ public class InternshipDAO {
         List<Internship> list = new ArrayList<>();
         String sql = "SELECT i.*, e.company_name FROM internships i " +
                      "LEFT JOIN employers e ON i.employer_id = e.employer_id WHERE i.employer_id = ? ORDER BY i.internship_id DESC";
-        try (PreparedStatement ps = getConn().prepareStatement(sql)) {
+        try (Connection conn = getConn();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setInt(1, employerId);
             try (ResultSet rs = ps.executeQuery()) {
                 while (rs.next()) list.add(mapRow(rs));
@@ -70,7 +92,8 @@ public class InternshipDAO {
         String sql = "SELECT i.*, e.company_name FROM internships i " +
                      "LEFT JOIN employers e ON i.employer_id = e.employer_id " +
                      "WHERE i.deadline >= CURDATE() ORDER BY i.deadline ASC";
-        try (Statement st = getConn().createStatement();
+        try (Connection conn = getConn();
+             Statement st = conn.createStatement();
              ResultSet rs = st.executeQuery(sql)) {
             while (rs.next()) list.add(mapRow(rs));
         } catch (SQLException e) { System.err.println("InternshipDAO.findActive: " + e.getMessage()); }
@@ -79,7 +102,8 @@ public class InternshipDAO {
 
     public boolean update(Internship internship) {
         String sql = "UPDATE internships SET title=?, description=?, requirements=?, deadline=?, employer_id=? WHERE internship_id=?";
-        try (PreparedStatement ps = getConn().prepareStatement(sql)) {
+        try (Connection conn = getConn();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setString(1, internship.getTitle());
             ps.setString(2, internship.getDescription());
             ps.setString(3, internship.getRequirements());
@@ -93,7 +117,8 @@ public class InternshipDAO {
 
     public boolean delete(int internshipId) {
         String sql = "DELETE FROM internships WHERE internship_id=?";
-        try (PreparedStatement ps = getConn().prepareStatement(sql)) {
+        try (Connection conn = getConn();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setInt(1, internshipId);
             return ps.executeUpdate() > 0;
         } catch (SQLException e) { System.err.println("InternshipDAO.delete: " + e.getMessage()); }
@@ -106,7 +131,8 @@ public class InternshipDAO {
                      "LEFT JOIN employers e ON i.employer_id = e.employer_id " +
                      "WHERE i.title LIKE ? OR i.description LIKE ? OR i.requirements LIKE ? ORDER BY i.internship_id DESC";
         String pattern = "%" + keyword + "%";
-        try (PreparedStatement ps = getConn().prepareStatement(sql)) {
+        try (Connection conn = getConn();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setString(1, pattern);
             ps.setString(2, pattern);
             ps.setString(3, pattern);
@@ -119,7 +145,8 @@ public class InternshipDAO {
 
     public int count() {
         String sql = "SELECT COUNT(*) FROM internships";
-        try (Statement st = getConn().createStatement();
+        try (Connection conn = getConn();
+             Statement st = conn.createStatement();
              ResultSet rs = st.executeQuery(sql)) {
             if (rs.next()) return rs.getInt(1);
         } catch (SQLException e) { System.err.println("InternshipDAO.count: " + e.getMessage()); }

@@ -1,19 +1,38 @@
 package com.campuslink.dao;
 
 import com.campuslink.models.Employer;
-import com.campuslink.utils.DBConnection;
+import com.campuslink.utils.AppDataSource;
+
+import javax.sql.DataSource;
 
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
 
 public class EmployerDAO {
-    private Connection getConn() { return DBConnection.getInstance().getConnection(); }
+    private final DataSource dataSource;
+
+    public EmployerDAO() {
+        this(AppDataSource.getInstance());
+    }
+
+    public EmployerDAO(DataSource dataSource) {
+        this.dataSource = dataSource;
+    }
+
+    private Connection getConn() {
+        try {
+            return dataSource.getConnection();
+        } catch (SQLException e) {
+            throw new RuntimeException("Database connection failed: " + e.getMessage(), e);
+        }
+    }
 
     public boolean create(Employer employer) {
         String sql = "INSERT INTO employers (user_id, company_name, contact_person, email, phone, address) " +
                      "VALUES (?, ?, ?, ?, ?, ?)";
-        try (PreparedStatement ps = getConn().prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
+        try (Connection conn = getConn();
+             PreparedStatement ps = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
             ps.setInt(1, employer.getUserId());
             ps.setString(2, employer.getCompanyName());
             ps.setString(3, employer.getContactPerson());
@@ -33,7 +52,8 @@ public class EmployerDAO {
 
     public Employer findById(int employerId) {
         String sql = "SELECT * FROM employers WHERE employer_id = ?";
-        try (PreparedStatement ps = getConn().prepareStatement(sql)) {
+        try (Connection conn = getConn();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setInt(1, employerId);
             try (ResultSet rs = ps.executeQuery()) {
                 if (rs.next()) return mapRow(rs);
@@ -44,7 +64,8 @@ public class EmployerDAO {
 
     public Employer findByUserId(int userId) {
         String sql = "SELECT * FROM employers WHERE user_id = ?";
-        try (PreparedStatement ps = getConn().prepareStatement(sql)) {
+        try (Connection conn = getConn();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setInt(1, userId);
             try (ResultSet rs = ps.executeQuery()) {
                 if (rs.next()) return mapRow(rs);
@@ -56,7 +77,8 @@ public class EmployerDAO {
     public List<Employer> findAll() {
         List<Employer> list = new ArrayList<>();
         String sql = "SELECT * FROM employers ORDER BY employer_id";
-        try (Statement st = getConn().createStatement();
+        try (Connection conn = getConn();
+             Statement st = conn.createStatement();
              ResultSet rs = st.executeQuery(sql)) {
             while (rs.next()) list.add(mapRow(rs));
         } catch (SQLException e) { System.err.println("EmployerDAO.findAll: " + e.getMessage()); }
@@ -66,7 +88,8 @@ public class EmployerDAO {
     public boolean update(Employer employer) {
         String sql = "UPDATE employers SET company_name=?, contact_person=?, email=?, phone=?, address=? " +
                      "WHERE employer_id=?";
-        try (PreparedStatement ps = getConn().prepareStatement(sql)) {
+        try (Connection conn = getConn();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setString(1, employer.getCompanyName());
             ps.setString(2, employer.getContactPerson());
             ps.setString(3, employer.getEmail());
@@ -80,7 +103,8 @@ public class EmployerDAO {
 
     public boolean delete(int employerId) {
         String sql = "DELETE FROM employers WHERE employer_id=?";
-        try (PreparedStatement ps = getConn().prepareStatement(sql)) {
+        try (Connection conn = getConn();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setInt(1, employerId);
             return ps.executeUpdate() > 0;
         } catch (SQLException e) { System.err.println("EmployerDAO.delete: " + e.getMessage()); }
@@ -91,7 +115,8 @@ public class EmployerDAO {
         List<Employer> list = new ArrayList<>();
         String sql = "SELECT * FROM employers WHERE company_name LIKE ? OR contact_person LIKE ? ORDER BY employer_id";
         String pattern = "%" + keyword + "%";
-        try (PreparedStatement ps = getConn().prepareStatement(sql)) {
+        try (Connection conn = getConn();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setString(1, pattern);
             ps.setString(2, pattern);
             try (ResultSet rs = ps.executeQuery()) {
@@ -103,7 +128,8 @@ public class EmployerDAO {
 
     public int count() {
         String sql = "SELECT COUNT(*) FROM employers";
-        try (Statement st = getConn().createStatement();
+        try (Connection conn = getConn();
+             Statement st = conn.createStatement();
              ResultSet rs = st.executeQuery(sql)) {
             if (rs.next()) return rs.getInt(1);
         } catch (SQLException e) { System.err.println("EmployerDAO.count: " + e.getMessage()); }

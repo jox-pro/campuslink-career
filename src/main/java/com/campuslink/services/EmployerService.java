@@ -13,10 +13,21 @@ import com.campuslink.utils.ValidationUtil;
 import java.util.List;
 
 public class EmployerService {
-    private final EmployerDAO employerDAO = new EmployerDAO();
-    private final JobDAO jobDAO = new JobDAO();
-    private final InternshipDAO internshipDAO = new InternshipDAO();
-    private final ApplicationDAO applicationDAO = new ApplicationDAO();
+    private final EmployerDAO employerDAO;
+    private final JobDAO jobDAO;
+    private final InternshipDAO internshipDAO;
+    private final ApplicationDAO applicationDAO;
+
+    public EmployerService() {
+        this(new EmployerDAO(), new JobDAO(), new InternshipDAO(), new ApplicationDAO());
+    }
+
+    public EmployerService(EmployerDAO employerDAO, JobDAO jobDAO, InternshipDAO internshipDAO, ApplicationDAO applicationDAO) {
+        this.employerDAO = employerDAO;
+        this.jobDAO = jobDAO;
+        this.internshipDAO = internshipDAO;
+        this.applicationDAO = applicationDAO;
+    }
 
     public Employer getProfile(int userId) {
         return employerDAO.findByUserId(userId);
