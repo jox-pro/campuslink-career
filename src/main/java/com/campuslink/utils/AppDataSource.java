@@ -67,19 +67,37 @@ public class AppDataSource implements DataSource {
     private static AppDataSource fromClasspathProperties() {
         Properties props = new Properties();
         try (InputStream is = AppDataSource.class.getClassLoader().getResourceAsStream("db.properties")) {
-            if (is == null) {
-                throw new IllegalStateException("db.properties not found in classpath");
+            if (is != null) {
+                props.load(is);
             }
-            props.load(is);
         } catch (IOException e) {
             throw new IllegalStateException("Failed to load db.properties", e);
         }
-        return new AppDataSource(
-            props.getProperty("db.url"),
-            props.getProperty("db.username"),
-            props.getProperty("db.password"),
-            props.getProperty("db.driver")
-        );
+        return fromProperties(props);
+    }
+
+    private static AppDataSource fromProperties(Properties props) {
+        String driverClassName = getEnvOrProperty("DB_DRIVER", props.getProperty("db.driver"));
+        String url = getEnvOrProperty("DB_URL", props.getProperty("db.url"));
+        String username = getEnvOrProperty("DB_USERNAME", props.getProperty("db.username"));
+        String password = getEnvOrProperty("DB_PASSWORD", props.getProperty("db.password"));
+
+        if (url == null || url.isBlank()) {
+            throw new IllegalStateException("Database URL must be configured via DB_URL or db.properties");
+        }
+        if (username == null || username.isBlank()) {
+            throw new IllegalStateException("Database username must be configured via DB_USERNAME or db.properties");
+        }
+
+        return new AppDataSource(url.trim(), username.trim(), password != null ? password : "", driverClassName);
+    }
+
+    private static String getEnvOrProperty(String envName, String propValue) {
+        String envValue = System.getenv(envName);
+        if (envValue != null && !envValue.isBlank()) {
+            return envValue;
+        }
+        return propValue;
     }
 
     /**

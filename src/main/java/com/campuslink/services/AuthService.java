@@ -33,16 +33,21 @@ public class AuthService {
     }
 
     public User register(String username, String password, String role) {
-        if (userDAO.findByUsername(username) != null) return null; // already exists
+        if (username == null || username.trim().isEmpty() || password == null || password.isEmpty()) {
+            return null;
+        }
+        String normalizedUsername = username.trim();
+        if (userDAO.findByUsername(normalizedUsername) != null) return null; // already exists
         User user = new User();
-        user.setUsername(username.trim());
+        user.setUsername(normalizedUsername);
         user.setPassword(PasswordUtil.hashPassword(password));
         user.setRole(role);
         if (userDAO.create(user)) {
-            auditLogDAO.insert("register", username.trim(), "success", "account-created");
+            SessionManager.getInstance().setCurrentUser(user);
+            auditLogDAO.insert("register", normalizedUsername, "success", "account-created");
             return user;
         }
-        auditLogDAO.insert("register", username != null ? username.trim() : "", "failure", "account-creation-failed");
+        auditLogDAO.insert("register", normalizedUsername, "failure", "account-creation-failed");
         return null;
     }
 
