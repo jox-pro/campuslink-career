@@ -1,18 +1,37 @@
 package com.campuslink.dao;
 
 import com.campuslink.models.Resource;
-import com.campuslink.utils.DBConnection;
+import com.campuslink.utils.AppDataSource;
+
+import javax.sql.DataSource;
 
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
 
 public class ResourceDAO {
-    private Connection getConn() { return DBConnection.getInstance().getConnection(); }
+    private final DataSource dataSource;
+
+    public ResourceDAO() {
+        this(AppDataSource.getInstance());
+    }
+
+    public ResourceDAO(DataSource dataSource) {
+        this.dataSource = dataSource;
+    }
+
+    private Connection getConn() {
+        try {
+            return dataSource.getConnection();
+        } catch (SQLException e) {
+            throw new RuntimeException("Database connection failed: " + e.getMessage(), e);
+        }
+    }
 
     public boolean create(Resource resource) {
         String sql = "INSERT INTO resources (title, description, file_path) VALUES (?, ?, ?)";
-        try (PreparedStatement ps = getConn().prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
+        try (Connection conn = getConn();
+             PreparedStatement ps = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
             ps.setString(1, resource.getTitle());
             ps.setString(2, resource.getDescription());
             ps.setString(3, resource.getFilePath());
@@ -29,7 +48,8 @@ public class ResourceDAO {
 
     public Resource findById(int resourceId) {
         String sql = "SELECT * FROM resources WHERE resource_id = ?";
-        try (PreparedStatement ps = getConn().prepareStatement(sql)) {
+        try (Connection conn = getConn();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setInt(1, resourceId);
             try (ResultSet rs = ps.executeQuery()) {
                 if (rs.next()) return mapRow(rs);
@@ -41,7 +61,8 @@ public class ResourceDAO {
     public List<Resource> findAll() {
         List<Resource> list = new ArrayList<>();
         String sql = "SELECT * FROM resources ORDER BY uploaded_at DESC";
-        try (Statement st = getConn().createStatement();
+        try (Connection conn = getConn();
+             Statement st = conn.createStatement();
              ResultSet rs = st.executeQuery(sql)) {
             while (rs.next()) list.add(mapRow(rs));
         } catch (SQLException e) { System.err.println("ResourceDAO.findAll: " + e.getMessage()); }
@@ -50,7 +71,8 @@ public class ResourceDAO {
 
     public boolean update(Resource resource) {
         String sql = "UPDATE resources SET title=?, description=?, file_path=? WHERE resource_id=?";
-        try (PreparedStatement ps = getConn().prepareStatement(sql)) {
+        try (Connection conn = getConn();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setString(1, resource.getTitle());
             ps.setString(2, resource.getDescription());
             ps.setString(3, resource.getFilePath());
@@ -62,7 +84,8 @@ public class ResourceDAO {
 
     public boolean delete(int resourceId) {
         String sql = "DELETE FROM resources WHERE resource_id=?";
-        try (PreparedStatement ps = getConn().prepareStatement(sql)) {
+        try (Connection conn = getConn();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setInt(1, resourceId);
             return ps.executeUpdate() > 0;
         } catch (SQLException e) { System.err.println("ResourceDAO.delete: " + e.getMessage()); }
@@ -71,7 +94,8 @@ public class ResourceDAO {
 
     public int count() {
         String sql = "SELECT COUNT(*) FROM resources";
-        try (Statement st = getConn().createStatement();
+        try (Connection conn = getConn();
+             Statement st = conn.createStatement();
              ResultSet rs = st.executeQuery(sql)) {
             if (rs.next()) return rs.getInt(1);
         } catch (SQLException e) { System.err.println("ResourceDAO.count: " + e.getMessage()); }

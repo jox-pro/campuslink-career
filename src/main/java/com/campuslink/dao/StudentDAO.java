@@ -1,19 +1,38 @@
 package com.campuslink.dao;
 
 import com.campuslink.models.Student;
-import com.campuslink.utils.DBConnection;
+import com.campuslink.utils.AppDataSource;
+
+import javax.sql.DataSource;
 
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
 
 public class StudentDAO {
-    private Connection getConn() { return DBConnection.getInstance().getConnection(); }
+    private final DataSource dataSource;
+
+    public StudentDAO() {
+        this(AppDataSource.getInstance());
+    }
+
+    public StudentDAO(DataSource dataSource) {
+        this.dataSource = dataSource;
+    }
+
+    private Connection getConn() {
+        try {
+            return dataSource.getConnection();
+        } catch (SQLException e) {
+            throw new RuntimeException("Database connection failed: " + e.getMessage(), e);
+        }
+    }
 
     public boolean create(Student student) {
         String sql = "INSERT INTO students (user_id, full_name, email, phone, course, year_of_study, skills, cv_path) " +
                      "VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
-        try (PreparedStatement ps = getConn().prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
+        try (Connection conn = getConn();
+             PreparedStatement ps = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
             ps.setInt(1, student.getUserId());
             ps.setString(2, student.getFullName());
             ps.setString(3, student.getEmail());
@@ -35,7 +54,8 @@ public class StudentDAO {
 
     public Student findById(int studentId) {
         String sql = "SELECT * FROM students WHERE student_id = ?";
-        try (PreparedStatement ps = getConn().prepareStatement(sql)) {
+        try (Connection conn = getConn();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setInt(1, studentId);
             try (ResultSet rs = ps.executeQuery()) {
                 if (rs.next()) return mapRow(rs);
@@ -46,7 +66,8 @@ public class StudentDAO {
 
     public Student findByUserId(int userId) {
         String sql = "SELECT * FROM students WHERE user_id = ?";
-        try (PreparedStatement ps = getConn().prepareStatement(sql)) {
+        try (Connection conn = getConn();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setInt(1, userId);
             try (ResultSet rs = ps.executeQuery()) {
                 if (rs.next()) return mapRow(rs);
@@ -58,7 +79,8 @@ public class StudentDAO {
     public List<Student> findAll() {
         List<Student> list = new ArrayList<>();
         String sql = "SELECT * FROM students ORDER BY student_id";
-        try (Statement st = getConn().createStatement();
+        try (Connection conn = getConn();
+             Statement st = conn.createStatement();
              ResultSet rs = st.executeQuery(sql)) {
             while (rs.next()) list.add(mapRow(rs));
         } catch (SQLException e) { System.err.println("StudentDAO.findAll: " + e.getMessage()); }
@@ -68,7 +90,8 @@ public class StudentDAO {
     public boolean update(Student student) {
         String sql = "UPDATE students SET full_name=?, email=?, phone=?, course=?, " +
                      "year_of_study=?, skills=?, cv_path=? WHERE student_id=?";
-        try (PreparedStatement ps = getConn().prepareStatement(sql)) {
+        try (Connection conn = getConn();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setString(1, student.getFullName());
             ps.setString(2, student.getEmail());
             ps.setString(3, student.getPhone());
@@ -84,7 +107,8 @@ public class StudentDAO {
 
     public boolean delete(int studentId) {
         String sql = "DELETE FROM students WHERE student_id=?";
-        try (PreparedStatement ps = getConn().prepareStatement(sql)) {
+        try (Connection conn = getConn();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setInt(1, studentId);
             return ps.executeUpdate() > 0;
         } catch (SQLException e) { System.err.println("StudentDAO.delete: " + e.getMessage()); }
@@ -95,7 +119,8 @@ public class StudentDAO {
         List<Student> list = new ArrayList<>();
         String sql = "SELECT * FROM students WHERE full_name LIKE ? OR course LIKE ? ORDER BY student_id";
         String pattern = "%" + keyword + "%";
-        try (PreparedStatement ps = getConn().prepareStatement(sql)) {
+        try (Connection conn = getConn();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setString(1, pattern);
             ps.setString(2, pattern);
             try (ResultSet rs = ps.executeQuery()) {
@@ -107,7 +132,8 @@ public class StudentDAO {
 
     public int count() {
         String sql = "SELECT COUNT(*) FROM students";
-        try (Statement st = getConn().createStatement();
+        try (Connection conn = getConn();
+             Statement st = conn.createStatement();
              ResultSet rs = st.executeQuery(sql)) {
             if (rs.next()) return rs.getInt(1);
         } catch (SQLException e) { System.err.println("StudentDAO.count: " + e.getMessage()); }

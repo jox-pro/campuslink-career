@@ -10,8 +10,17 @@ import java.time.LocalDate;
 import java.util.List;
 
 public class StudentService {
-    private final StudentDAO studentDAO = new StudentDAO();
-    private final ApplicationDAO applicationDAO = new ApplicationDAO();
+    private final StudentDAO studentDAO;
+    private final ApplicationDAO applicationDAO;
+
+    public StudentService() {
+        this(new StudentDAO(), new ApplicationDAO());
+    }
+
+    public StudentService(StudentDAO studentDAO, ApplicationDAO applicationDAO) {
+        this.studentDAO = studentDAO;
+        this.applicationDAO = applicationDAO;
+    }
 
     public boolean createProfile(Student student) {
         if (ValidationUtil.isNullOrEmpty(student.getFullName())) return false;

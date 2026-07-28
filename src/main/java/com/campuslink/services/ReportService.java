@@ -6,11 +6,24 @@ import java.util.HashMap;
 import java.util.Map;
 
 public class ReportService {
-    private final StudentDAO studentDAO = new StudentDAO();
-    private final EmployerDAO employerDAO = new EmployerDAO();
-    private final JobDAO jobDAO = new JobDAO();
-    private final InternshipDAO internshipDAO = new InternshipDAO();
-    private final ApplicationDAO applicationDAO = new ApplicationDAO();
+    private final StudentDAO studentDAO;
+    private final EmployerDAO employerDAO;
+    private final JobDAO jobDAO;
+    private final InternshipDAO internshipDAO;
+    private final ApplicationDAO applicationDAO;
+
+    public ReportService() {
+        this(new StudentDAO(), new EmployerDAO(), new JobDAO(), new InternshipDAO(), new ApplicationDAO());
+    }
+
+    public ReportService(StudentDAO studentDAO, EmployerDAO employerDAO, JobDAO jobDAO,
+                          InternshipDAO internshipDAO, ApplicationDAO applicationDAO) {
+        this.studentDAO = studentDAO;
+        this.employerDAO = employerDAO;
+        this.jobDAO = jobDAO;
+        this.internshipDAO = internshipDAO;
+        this.applicationDAO = applicationDAO;
+    }
 
     public Map<String, Integer> getDashboardStats() {
         Map<String, Integer> stats = new HashMap<>();

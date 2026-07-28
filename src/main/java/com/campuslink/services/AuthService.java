@@ -1,13 +1,23 @@
 package com.campuslink.services;
 
+import com.campuslink.dao.AuditLogDAO;
 import com.campuslink.dao.UserDAO;
 import com.campuslink.models.User;
-import com.campuslink.utils.AuditLogger;
 import com.campuslink.utils.PasswordUtil;
 import com.campuslink.utils.SessionManager;
 
 public class AuthService {
-    private final UserDAO userDAO = new UserDAO();
+    private final UserDAO userDAO;
+    private final AuditLogDAO auditLogDAO;
+
+    public AuthService() {
+        this(new UserDAO(), new AuditLogDAO());
+    }
+
+    public AuthService(UserDAO userDAO, AuditLogDAO auditLogDAO) {
+        this.userDAO = userDAO;
+        this.auditLogDAO = auditLogDAO;
+    }
 
     public User login(String username, String password) {
         if (username == null || username.trim().isEmpty() || password == null) return null;
@@ -15,10 +25,10 @@ public class AuthService {
         User user = userDAO.findByUsername(normalizedUsername);
         if (user != null && PasswordUtil.checkPassword(password, user.getPassword())) {
             SessionManager.getInstance().setCurrentUser(user);
-            AuditLogger.log("login", normalizedUsername, "success", "authenticated");
+            auditLogDAO.insert("login", normalizedUsername, "success", "authenticated");
             return user;
         }
-        AuditLogger.log("login", normalizedUsername, "failure", "invalid credentials");
+        auditLogDAO.insert("login", normalizedUsername, "failure", "invalid credentials");
         return null;
     }
 
@@ -29,10 +39,10 @@ public class AuthService {
         user.setPassword(PasswordUtil.hashPassword(password));
         user.setRole(role);
         if (userDAO.create(user)) {
-            AuditLogger.log("register", username.trim(), "success", "account-created");
+            auditLogDAO.insert("register", username.trim(), "success", "account-created");
             return user;
         }
-        AuditLogger.log("register", username != null ? username.trim() : "", "failure", "account-creation-failed");
+        auditLogDAO.insert("register", username != null ? username.trim() : "", "failure", "account-creation-failed");
         return null;
     }
 

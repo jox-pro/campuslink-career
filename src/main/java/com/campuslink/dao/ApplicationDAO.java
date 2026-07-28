@@ -1,19 +1,38 @@
 package com.campuslink.dao;
 
 import com.campuslink.models.Application;
-import com.campuslink.utils.DBConnection;
+import com.campuslink.utils.AppDataSource;
+
+import javax.sql.DataSource;
 
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
 
 public class ApplicationDAO {
-    private Connection getConn() { return DBConnection.getInstance().getConnection(); }
+    private final DataSource dataSource;
+
+    public ApplicationDAO() {
+        this(AppDataSource.getInstance());
+    }
+
+    public ApplicationDAO(DataSource dataSource) {
+        this.dataSource = dataSource;
+    }
+
+    private Connection getConn() {
+        try {
+            return dataSource.getConnection();
+        } catch (SQLException e) {
+            throw new RuntimeException("Database connection failed: " + e.getMessage(), e);
+        }
+    }
 
     public boolean create(Application app) {
         String sql = "INSERT INTO applications (student_id, opportunity_type, opportunity_id, application_date, status) " +
                      "VALUES (?, ?, ?, ?, ?)";
-        try (PreparedStatement ps = getConn().prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
+        try (Connection conn = getConn();
+             PreparedStatement ps = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
             ps.setInt(1, app.getStudentId());
             ps.setString(2, app.getOpportunityType());
             ps.setInt(3, app.getOpportunityId());
@@ -32,7 +51,8 @@ public class ApplicationDAO {
 
     public Application findById(int applicationId) {
         String sql = "SELECT * FROM applications WHERE application_id = ?";
-        try (PreparedStatement ps = getConn().prepareStatement(sql)) {
+        try (Connection conn = getConn();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setInt(1, applicationId);
             try (ResultSet rs = ps.executeQuery()) {
                 if (rs.next()) return mapRow(rs);
@@ -46,7 +66,8 @@ public class ApplicationDAO {
         String sql = "SELECT a.*, s.full_name as student_name FROM applications a " +
                      "JOIN students s ON a.student_id = s.student_id " +
                      "WHERE a.student_id = ? ORDER BY a.application_date DESC";
-        try (PreparedStatement ps = getConn().prepareStatement(sql)) {
+        try (Connection conn = getConn();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setInt(1, studentId);
             try (ResultSet rs = ps.executeQuery()) {
                 while (rs.next()) {
@@ -66,7 +87,8 @@ public class ApplicationDAO {
         String sql = "SELECT a.*, s.full_name as student_name FROM applications a " +
                      "JOIN students s ON a.student_id = s.student_id " +
                      "WHERE a.opportunity_type = ? AND a.opportunity_id = ? ORDER BY a.application_date DESC";
-        try (PreparedStatement ps = getConn().prepareStatement(sql)) {
+        try (Connection conn = getConn();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setString(1, type);
             ps.setInt(2, opportunityId);
             try (ResultSet rs = ps.executeQuery()) {
@@ -86,7 +108,8 @@ public class ApplicationDAO {
         String sql = "SELECT a.*, s.full_name as student_name FROM applications a " +
                      "JOIN students s ON a.student_id = s.student_id " +
                      "ORDER BY a.application_date DESC";
-        try (Statement st = getConn().createStatement();
+        try (Connection conn = getConn();
+             Statement st = conn.createStatement();
              ResultSet rs = st.executeQuery(sql)) {
             while (rs.next()) {
                 Application app = mapRow(rs);
@@ -101,7 +124,8 @@ public class ApplicationDAO {
     public boolean update(Application app) {
         String sql = "UPDATE applications SET student_id=?, opportunity_type=?, opportunity_id=?, " +
                      "application_date=?, status=? WHERE application_id=?";
-        try (PreparedStatement ps = getConn().prepareStatement(sql)) {
+        try (Connection conn = getConn();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setInt(1, app.getStudentId());
             ps.setString(2, app.getOpportunityType());
             ps.setInt(3, app.getOpportunityId());
@@ -115,7 +139,8 @@ public class ApplicationDAO {
 
     public boolean delete(int applicationId) {
         String sql = "DELETE FROM applications WHERE application_id=?";
-        try (PreparedStatement ps = getConn().prepareStatement(sql)) {
+        try (Connection conn = getConn();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setInt(1, applicationId);
             return ps.executeUpdate() > 0;
         } catch (SQLException e) { System.err.println("ApplicationDAO.delete: " + e.getMessage()); }
@@ -124,7 +149,8 @@ public class ApplicationDAO {
 
     public boolean updateStatus(int applicationId, String status) {
         String sql = "UPDATE applications SET status=? WHERE application_id=?";
-        try (PreparedStatement ps = getConn().prepareStatement(sql)) {
+        try (Connection conn = getConn();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setString(1, status);
             ps.setInt(2, applicationId);
             return ps.executeUpdate() > 0;
@@ -134,7 +160,8 @@ public class ApplicationDAO {
 
     public int countByStatus(String status) {
         String sql = "SELECT COUNT(*) FROM applications WHERE status = ?";
-        try (PreparedStatement ps = getConn().prepareStatement(sql)) {
+        try (Connection conn = getConn();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setString(1, status);
             try (ResultSet rs = ps.executeQuery()) {
                 if (rs.next()) return rs.getInt(1);
@@ -145,7 +172,8 @@ public class ApplicationDAO {
 
     public int count() {
         String sql = "SELECT COUNT(*) FROM applications";
-        try (Statement st = getConn().createStatement();
+        try (Connection conn = getConn();
+             Statement st = conn.createStatement();
              ResultSet rs = st.executeQuery(sql)) {
             if (rs.next()) return rs.getInt(1);
         } catch (SQLException e) { System.err.println("ApplicationDAO.count: " + e.getMessage()); }
@@ -156,7 +184,8 @@ public class ApplicationDAO {
         try {
             if ("JOB".equalsIgnoreCase(app.getOpportunityType())) {
                 String sql = "SELECT j.title, e.company_name FROM jobs j LEFT JOIN employers e ON j.employer_id = e.employer_id WHERE j.job_id = ?";
-                try (PreparedStatement ps = getConn().prepareStatement(sql)) {
+                try (Connection conn = getConn();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
                     ps.setInt(1, app.getOpportunityId());
                     try (ResultSet rs = ps.executeQuery()) {
                         if (rs.next()) {
@@ -167,7 +196,8 @@ public class ApplicationDAO {
                 }
             } else if ("INTERNSHIP".equalsIgnoreCase(app.getOpportunityType())) {
                 String sql = "SELECT i.title, e.company_name FROM internships i LEFT JOIN employers e ON i.employer_id = e.employer_id WHERE i.internship_id = ?";
-                try (PreparedStatement ps = getConn().prepareStatement(sql)) {
+                try (Connection conn = getConn();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
                     ps.setInt(1, app.getOpportunityId());
                     try (ResultSet rs = ps.executeQuery()) {
                         if (rs.next()) {

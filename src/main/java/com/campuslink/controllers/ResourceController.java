@@ -83,14 +83,26 @@ public class ResourceController {
         descF.setPromptText("Description");
         descF.setPrefRowCount(3);
         TextField pathF = new TextField();
-        pathF.setPromptText("/path/to/file.pdf");
+        pathF.setPromptText("Choose a file below");
+        pathF.setEditable(false);
         Button browseBtn = new Button("Browse...");
         browseBtn.setOnAction(e -> {
             FileChooser fc = new FileChooser();
             fc.setTitle("Select Resource File");
             Stage s = (Stage) tableView.getScene().getWindow();
-            File f = fc.showOpenDialog(s);
-            if (f != null) pathF.setText(f.getAbsolutePath());
+            File selected = fc.showOpenDialog(s);
+            if (selected == null) return;
+
+            try {
+                Path baseDir = resourcesBaseDir();
+                Files.createDirectories(baseDir);
+                String safeName = System.currentTimeMillis() + "_" + selected.getName().replaceAll("[^a-zA-Z0-9._-]", "_");
+                Path dest = baseDir.resolve(safeName);
+                Files.copy(selected.toPath(), dest, java.nio.file.StandardCopyOption.REPLACE_EXISTING);
+                pathF.setText(dest.toAbsolutePath().toString());
+            } catch (IOException ex) {
+                showAlert(Alert.AlertType.ERROR, "Error", "Failed to store file: " + ex.getMessage());
+            }
         });
 
         javafx.scene.layout.GridPane grid = new javafx.scene.layout.GridPane();
@@ -151,9 +163,8 @@ public class ResourceController {
             showAlert(Alert.AlertType.WARNING, "No File", "This resource has no file path."); return;
         }
 
-        Path baseDir = Paths.get(System.getProperty("user.home"), ".campuslink-career", "resources");
         Path resolvedPath = Paths.get(path).normalize();
-        Path allowedBase = baseDir.toAbsolutePath().normalize();
+        Path allowedBase = resourcesBaseDir();
         if (!resolvedPath.startsWith(allowedBase)) {
             showAlert(Alert.AlertType.WARNING, "Access Denied",
                 "Only files under the configured resource directory can be opened.");
@@ -179,6 +190,11 @@ public class ResourceController {
     @FXML
     private void handleRefresh() {
         loadResources();
+    }
+
+    private static Path resourcesBaseDir() {
+        return Paths.get(System.getProperty("user.home"), ".campuslink-career", "resources")
+            .toAbsolutePath().normalize();
     }
 
     private void showAlert(Alert.AlertType type, String title, String content) {
