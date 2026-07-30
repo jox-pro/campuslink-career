@@ -38,6 +38,8 @@
                     onAction="#handleResources" maxWidth="Infinity"/>
             <Button fx:id="btnReports" text="  Reports" styleClass="sidebar-btn"
                     onAction="#handleReports" maxWidth="Infinity"/>
+            <Button fx:id="btnAuditLogs" text="  Audit Logs" styleClass="sidebar-btn"
+                    onAction="#handleAuditLogs" maxWidth="Infinity"/>
             <Region VBox.vgrow="ALWAYS"/>
             <Button text="  Logout" styleClass="sidebar-btn-logout"
                     onAction="#handleLogout" maxWidth="Infinity"/>

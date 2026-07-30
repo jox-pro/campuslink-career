@@ -28,6 +28,7 @@ public class ResourceController {
     @FXML private TableColumn<Resource, String> colDescription;
     @FXML private TableColumn<Resource, String> colFilePath;
     @FXML private TableColumn<Resource, String> colUploaded;
+    @FXML private TextField searchField;
     @FXML private Label statusLabel;
     @FXML private Button btnAdd;
     @FXML private Button btnDelete;
@@ -188,7 +189,25 @@ public class ResourceController {
     }
 
     @FXML
+    private void handleSearch() {
+        if (searchField == null) return;
+        String keyword = searchField.getText().trim();
+        if (keyword.isEmpty()) {
+            loadResources();
+            return;
+        }
+        try {
+            List<Resource> results = resourceDAO.search(keyword);
+            tableView.setItems(FXCollections.observableArrayList(results));
+            if (statusLabel != null) statusLabel.setText("Found: " + results.size() + " resources");
+        } catch (Exception e) {
+            showAlert(Alert.AlertType.ERROR, "Error", "Search failed: " + e.getMessage());
+        }
+    }
+
+    @FXML
     private void handleRefresh() {
+        if (searchField != null) searchField.clear();
         loadResources();
     }
 

@@ -1,6 +1,8 @@
 package com.campuslink.controllers;
 
 import com.campuslink.services.ReportService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import javafx.fxml.FXML;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Label;
@@ -15,6 +17,7 @@ import java.time.format.DateTimeFormatter;
 import java.util.Map;
 
 public class ReportController {
+    private static final Logger logger = LoggerFactory.getLogger(ReportController.class);
 
     @FXML private Label lblStudents;
     @FXML private Label lblEmployers;
@@ -23,7 +26,11 @@ public class ReportController {
     @FXML private Label lblApplications;
     @FXML private Label lblPending;
     @FXML private Label lblAccepted;
+    @FXML private Label lblReviewed;
+    @FXML private Label lblRejected;
     @FXML private Label exportStatus;
+    @FXML private javafx.scene.control.DatePicker startDate;
+    @FXML private javafx.scene.control.DatePicker endDate;
 
     private final ReportService reportService = new ReportService();
     private Map<String, Integer> currentStats;
@@ -43,8 +50,10 @@ public class ReportController {
             if (lblApplications != null) lblApplications.setText(String.valueOf(currentStats.getOrDefault("totalApplications", 0)));
             if (lblPending != null)      lblPending.setText(String.valueOf(currentStats.getOrDefault("pendingApplications", 0)));
             if (lblAccepted != null)     lblAccepted.setText(String.valueOf(currentStats.getOrDefault("acceptedApplications", 0)));
+            if (lblReviewed != null)     lblReviewed.setText(String.valueOf(currentStats.getOrDefault("reviewedApplications", 0)));
+            if (lblRejected != null)     lblRejected.setText(String.valueOf(currentStats.getOrDefault("rejectedApplications", 0)));
         } catch (Exception e) {
-            System.err.println("ReportController.loadStats: " + e.getMessage());
+            logger.error("ReportController.loadStats failed: {}", e.getMessage(), e);
         }
     }
 
@@ -85,7 +94,9 @@ public class ReportController {
             writer.write("\nAPPLICATION STATUS BREAKDOWN\n");
             writer.write("----------------------------\n");
             writer.write(String.format("%-30s %d%n", "Pending:", currentStats.getOrDefault("pendingApplications", 0)));
+            writer.write(String.format("%-30s %d%n", "Reviewed:", currentStats.getOrDefault("reviewedApplications", 0)));
             writer.write(String.format("%-30s %d%n", "Accepted:", currentStats.getOrDefault("acceptedApplications", 0)));
+            writer.write(String.format("%-30s %d%n", "Rejected:", currentStats.getOrDefault("rejectedApplications", 0)));
             writer.write("\n=================================================\n");
             writer.write("          END OF REPORT\n");
             writer.write("=================================================\n");
@@ -94,6 +105,31 @@ public class ReportController {
             showAlert(Alert.AlertType.INFORMATION, "Export Successful", "Report saved to:\n" + file.getAbsolutePath());
         } catch (IOException e) {
             showAlert(Alert.AlertType.ERROR, "Export Failed", "Could not save report: " + e.getMessage());
+        }
+    }
+
+    @FXML
+    private void handleExportCSV() {
+        FileChooser fileChooser = new FileChooser();
+        fileChooser.setTitle("Export Applications to CSV");
+        fileChooser.setInitialFileName("applications_report_" +
+                LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyyMMdd_HHmmss")) + ".csv");
+        fileChooser.getExtensionFilters().add(new FileChooser.ExtensionFilter("CSV Files", "*.csv"));
+
+        Stage stage = (Stage) lblStudents.getScene().getWindow();
+        File file = fileChooser.showSaveDialog(stage);
+        if (file == null) return;
+
+        try {
+            reportService.exportApplicationsToCSV(file, 
+                startDate != null ? startDate.getValue() : null, 
+                endDate != null ? endDate.getValue() : null);
+            
+            if (exportStatus != null) exportStatus.setText("CSV exported: " + file.getName());
+            showAlert(Alert.AlertType.INFORMATION, "Export Successful", "Applications exported to CSV.");
+        } catch (IOException e) {
+            showAlert(Alert.AlertType.ERROR, "Export Failed", "Could not export CSV: " + e.getMessage());
+            logger.error("CSV export failed", e);
         }
     }
 

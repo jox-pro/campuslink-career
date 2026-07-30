@@ -2,6 +2,8 @@ package com.campuslink.controllers;
 
 import com.campuslink.models.User;
 import com.campuslink.services.AuthService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Scene;
@@ -16,6 +18,7 @@ import java.io.IOException;
 import java.util.Objects;
 
 public class LoginController {
+    private static final Logger logger = LoggerFactory.getLogger(LoginController.class);
 
     @FXML private TextField usernameField;
     @FXML private PasswordField passwordField;
@@ -54,6 +57,11 @@ public class LoginController {
             }
 
             Stage stage = (Stage) loginBtn.getScene().getWindow();
+            if (user.isMustChangePassword()) {
+                navigateTo(stage, "/fxml/ChangePassword.fxml", 480, 550);
+                return;
+            }
+
             switch (user.getRole()) {
                 case "ADMIN":
                     navigateTo(stage, "/fxml/AdminDashboard.fxml", 1100, 700);
@@ -69,7 +77,7 @@ public class LoginController {
             }
         } catch (Exception e) {
             showError("Login failed: " + e.getMessage());
-            System.err.println("Login error: " + e.getMessage());
+            logger.error("Login error: {}", e.getMessage(), e);
         }
     }
 
@@ -80,6 +88,16 @@ public class LoginController {
             navigateTo(stage, "/fxml/Register.fxml", 480, 680);
         } catch (Exception e) {
             showError("Cannot open registration: " + e.getMessage());
+        }
+    }
+
+    @FXML
+    private void handleEmployerRegister() {
+        try {
+            Stage stage = (Stage) loginBtn.getScene().getWindow();
+            navigateTo(stage, "/fxml/EmployerRegister.fxml", 480, 600);
+        } catch (Exception e) {
+            showError("Cannot open employer registration: " + e.getMessage());
         }
     }
 

@@ -2,6 +2,8 @@ package com.campuslink.dao;
 
 import com.campuslink.models.Job;
 import com.campuslink.utils.AppDataSource;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.sql.DataSource;
 
@@ -10,6 +12,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class JobDAO {
+    private static final Logger logger = LoggerFactory.getLogger(JobDAO.class);
     private final DataSource dataSource;
 
     public JobDAO() {
@@ -36,7 +39,11 @@ public class JobDAO {
             ps.setString(2, job.getDescription());
             ps.setString(3, job.getRequirements());
             ps.setDate(4, job.getDeadline() != null ? Date.valueOf(job.getDeadline()) : null);
-            ps.setInt(5, job.getEmployerId());
+            if (job.getEmployerId() > 0) {
+                ps.setInt(5, job.getEmployerId());
+            } else {
+                ps.setNull(5, Types.INTEGER);
+            }
             int rows = ps.executeUpdate();
             if (rows > 0) {
                 try (ResultSet rs = ps.getGeneratedKeys()) {
@@ -44,7 +51,9 @@ public class JobDAO {
                 }
                 return true;
             }
-        } catch (SQLException e) { System.err.println("JobDAO.create: " + e.getMessage()); }
+        } catch (SQLException e) {
+            logger.error("JobDAO.create failed for job {}: {}", job.getTitle(), e.getMessage(), e);
+        }
         return false;
     }
 
@@ -57,7 +66,9 @@ public class JobDAO {
             try (ResultSet rs = ps.executeQuery()) {
                 if (rs.next()) return mapRow(rs);
             }
-        } catch (SQLException e) { System.err.println("JobDAO.findById: " + e.getMessage()); }
+        } catch (SQLException e) {
+            logger.error("JobDAO.findById failed for ID {}: {}", jobId, e.getMessage(), e);
+        }
         return null;
     }
 
@@ -69,7 +80,9 @@ public class JobDAO {
              Statement st = conn.createStatement();
              ResultSet rs = st.executeQuery(sql)) {
             while (rs.next()) list.add(mapRow(rs));
-        } catch (SQLException e) { System.err.println("JobDAO.findAll: " + e.getMessage()); }
+        } catch (SQLException e) {
+            logger.error("JobDAO.findAll failed: {}", e.getMessage(), e);
+        }
         return list;
     }
 
@@ -83,7 +96,9 @@ public class JobDAO {
             try (ResultSet rs = ps.executeQuery()) {
                 while (rs.next()) list.add(mapRow(rs));
             }
-        } catch (SQLException e) { System.err.println("JobDAO.findByEmployer: " + e.getMessage()); }
+        } catch (SQLException e) {
+            logger.error("JobDAO.findByEmployer failed for employer ID {}: {}", employerId, e.getMessage(), e);
+        }
         return list;
     }
 
@@ -96,7 +111,9 @@ public class JobDAO {
              Statement st = conn.createStatement();
              ResultSet rs = st.executeQuery(sql)) {
             while (rs.next()) list.add(mapRow(rs));
-        } catch (SQLException e) { System.err.println("JobDAO.findActive: " + e.getMessage()); }
+        } catch (SQLException e) {
+            logger.error("JobDAO.findActive failed: {}", e.getMessage(), e);
+        }
         return list;
     }
 
@@ -108,10 +125,16 @@ public class JobDAO {
             ps.setString(2, job.getDescription());
             ps.setString(3, job.getRequirements());
             ps.setDate(4, job.getDeadline() != null ? Date.valueOf(job.getDeadline()) : null);
-            ps.setInt(5, job.getEmployerId());
+            if (job.getEmployerId() > 0) {
+                ps.setInt(5, job.getEmployerId());
+            } else {
+                ps.setNull(5, Types.INTEGER);
+            }
             ps.setInt(6, job.getJobId());
             return ps.executeUpdate() > 0;
-        } catch (SQLException e) { System.err.println("JobDAO.update: " + e.getMessage()); }
+        } catch (SQLException e) {
+            logger.error("JobDAO.update failed for job ID {}: {}", job.getJobId(), e.getMessage(), e);
+        }
         return false;
     }
 
@@ -121,7 +144,9 @@ public class JobDAO {
              PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setInt(1, jobId);
             return ps.executeUpdate() > 0;
-        } catch (SQLException e) { System.err.println("JobDAO.delete: " + e.getMessage()); }
+        } catch (SQLException e) {
+            logger.error("JobDAO.delete failed for job ID {}: {}", jobId, e.getMessage(), e);
+        }
         return false;
     }
 
@@ -139,7 +164,9 @@ public class JobDAO {
             try (ResultSet rs = ps.executeQuery()) {
                 while (rs.next()) list.add(mapRow(rs));
             }
-        } catch (SQLException e) { System.err.println("JobDAO.search: " + e.getMessage()); }
+        } catch (SQLException e) {
+            logger.error("JobDAO.search failed for keyword {}: {}", keyword, e.getMessage(), e);
+        }
         return list;
     }
 
@@ -149,7 +176,9 @@ public class JobDAO {
              Statement st = conn.createStatement();
              ResultSet rs = st.executeQuery(sql)) {
             if (rs.next()) return rs.getInt(1);
-        } catch (SQLException e) { System.err.println("JobDAO.count: " + e.getMessage()); }
+        } catch (SQLException e) {
+            logger.error("JobDAO.count failed: {}", e.getMessage(), e);
+        }
         return 0;
     }
 

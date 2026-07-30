@@ -2,6 +2,8 @@ package com.campuslink.dao;
 
 import com.campuslink.models.Internship;
 import com.campuslink.utils.AppDataSource;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.sql.DataSource;
 
@@ -10,6 +12,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class InternshipDAO {
+    private static final Logger logger = LoggerFactory.getLogger(InternshipDAO.class);
     private final DataSource dataSource;
 
     public InternshipDAO() {
@@ -36,7 +39,11 @@ public class InternshipDAO {
             ps.setString(2, internship.getDescription());
             ps.setString(3, internship.getRequirements());
             ps.setDate(4, internship.getDeadline() != null ? Date.valueOf(internship.getDeadline()) : null);
-            ps.setInt(5, internship.getEmployerId());
+            if (internship.getEmployerId() > 0) {
+                ps.setInt(5, internship.getEmployerId());
+            } else {
+                ps.setNull(5, Types.INTEGER);
+            }
             int rows = ps.executeUpdate();
             if (rows > 0) {
                 try (ResultSet rs = ps.getGeneratedKeys()) {
@@ -44,7 +51,9 @@ public class InternshipDAO {
                 }
                 return true;
             }
-        } catch (SQLException e) { System.err.println("InternshipDAO.create: " + e.getMessage()); }
+        } catch (SQLException e) {
+            logger.error("InternshipDAO.create failed for internship {}: {}", internship.getTitle(), e.getMessage(), e);
+        }
         return false;
     }
 
@@ -57,7 +66,9 @@ public class InternshipDAO {
             try (ResultSet rs = ps.executeQuery()) {
                 if (rs.next()) return mapRow(rs);
             }
-        } catch (SQLException e) { System.err.println("InternshipDAO.findById: " + e.getMessage()); }
+        } catch (SQLException e) {
+            logger.error("InternshipDAO.findById failed for ID {}: {}", internshipId, e.getMessage(), e);
+        }
         return null;
     }
 
@@ -69,7 +80,9 @@ public class InternshipDAO {
              Statement st = conn.createStatement();
              ResultSet rs = st.executeQuery(sql)) {
             while (rs.next()) list.add(mapRow(rs));
-        } catch (SQLException e) { System.err.println("InternshipDAO.findAll: " + e.getMessage()); }
+        } catch (SQLException e) {
+            logger.error("InternshipDAO.findAll failed: {}", e.getMessage(), e);
+        }
         return list;
     }
 
@@ -83,7 +96,9 @@ public class InternshipDAO {
             try (ResultSet rs = ps.executeQuery()) {
                 while (rs.next()) list.add(mapRow(rs));
             }
-        } catch (SQLException e) { System.err.println("InternshipDAO.findByEmployer: " + e.getMessage()); }
+        } catch (SQLException e) {
+            logger.error("InternshipDAO.findByEmployer failed for employer ID {}: {}", employerId, e.getMessage(), e);
+        }
         return list;
     }
 
@@ -96,7 +111,9 @@ public class InternshipDAO {
              Statement st = conn.createStatement();
              ResultSet rs = st.executeQuery(sql)) {
             while (rs.next()) list.add(mapRow(rs));
-        } catch (SQLException e) { System.err.println("InternshipDAO.findActive: " + e.getMessage()); }
+        } catch (SQLException e) {
+            logger.error("InternshipDAO.findActive failed: {}", e.getMessage(), e);
+        }
         return list;
     }
 
@@ -108,10 +125,16 @@ public class InternshipDAO {
             ps.setString(2, internship.getDescription());
             ps.setString(3, internship.getRequirements());
             ps.setDate(4, internship.getDeadline() != null ? Date.valueOf(internship.getDeadline()) : null);
-            ps.setInt(5, internship.getEmployerId());
+            if (internship.getEmployerId() > 0) {
+                ps.setInt(5, internship.getEmployerId());
+            } else {
+                ps.setNull(5, Types.INTEGER);
+            }
             ps.setInt(6, internship.getInternshipId());
             return ps.executeUpdate() > 0;
-        } catch (SQLException e) { System.err.println("InternshipDAO.update: " + e.getMessage()); }
+        } catch (SQLException e) {
+            logger.error("InternshipDAO.update failed for internship ID {}: {}", internship.getInternshipId(), e.getMessage(), e);
+        }
         return false;
     }
 
@@ -121,7 +144,9 @@ public class InternshipDAO {
              PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setInt(1, internshipId);
             return ps.executeUpdate() > 0;
-        } catch (SQLException e) { System.err.println("InternshipDAO.delete: " + e.getMessage()); }
+        } catch (SQLException e) {
+            logger.error("InternshipDAO.delete failed for internship ID {}: {}", internshipId, e.getMessage(), e);
+        }
         return false;
     }
 
@@ -139,7 +164,9 @@ public class InternshipDAO {
             try (ResultSet rs = ps.executeQuery()) {
                 while (rs.next()) list.add(mapRow(rs));
             }
-        } catch (SQLException e) { System.err.println("InternshipDAO.search: " + e.getMessage()); }
+        } catch (SQLException e) {
+            logger.error("InternshipDAO.search failed for keyword {}: {}", keyword, e.getMessage(), e);
+        }
         return list;
     }
 
@@ -149,7 +176,9 @@ public class InternshipDAO {
              Statement st = conn.createStatement();
              ResultSet rs = st.executeQuery(sql)) {
             if (rs.next()) return rs.getInt(1);
-        } catch (SQLException e) { System.err.println("InternshipDAO.count: " + e.getMessage()); }
+        } catch (SQLException e) {
+            logger.error("InternshipDAO.count failed: {}", e.getMessage(), e);
+        }
         return 0;
     }
 

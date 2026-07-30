@@ -1,6 +1,9 @@
 package com.campuslink.controllers;
 
 import com.campuslink.utils.SessionManager;
+import com.campuslink.utils.ViewNavigator;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Node;
@@ -13,7 +16,8 @@ import javafx.stage.Stage;
 import java.io.IOException;
 import java.util.Objects;
 
-public class EmployerDashboardController {
+public class EmployerDashboardController implements ViewNavigator {
+    private static final Logger logger = LoggerFactory.getLogger(EmployerDashboardController.class);
 
     @FXML private StackPane contentArea;
     @FXML private Label lblCurrentUser;
@@ -27,6 +31,7 @@ public class EmployerDashboardController {
 
     @FXML
     public void initialize() {
+        SessionManager.getInstance().setViewNavigator(this);
         if (lblCurrentUser != null && SessionManager.getInstance().getCurrentUser() != null) {
             lblCurrentUser.setText("Logged in as: " + SessionManager.getInstance().getCurrentUser().getUsername());
         }
@@ -54,20 +59,23 @@ public class EmployerDashboardController {
             stage.setResizable(false);
             stage.centerOnScreen();
         } catch (IOException e) {
-            System.err.println("Logout navigation error: " + e.getMessage());
+            logger.error("Logout navigation error: {}", e.getMessage(), e);
         }
     }
 
-    public void loadView(String fxmlPath) {
+    @Override
+    public <T> T loadView(String fxmlPath) {
         try {
             FXMLLoader loader = new FXMLLoader(getClass().getResource(fxmlPath));
             Node node = loader.load();
             contentArea.getChildren().setAll(node);
+            return loader.getController();
         } catch (IOException e) {
-            System.err.println("Failed to load view " + fxmlPath + ": " + e.getMessage());
+            logger.error("Failed to load view {}: {}", fxmlPath, e.getMessage(), e);
             Label errorLabel = new Label("Failed to load view: " + fxmlPath);
             errorLabel.setStyle("-fx-text-fill: red;");
             contentArea.getChildren().setAll(errorLabel);
+            return null;
         }
     }
 

@@ -1,6 +1,8 @@
 package com.campuslink.dao;
 
 import com.campuslink.utils.AppDataSource;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.sql.DataSource;
 
@@ -16,6 +18,7 @@ import java.util.List;
  * same application it's auditing isn't an audit trail.
  */
 public class AuditLogDAO {
+    private static final Logger logger = LoggerFactory.getLogger(AuditLogDAO.class);
     private final DataSource dataSource;
 
     public AuditLogDAO() {
@@ -44,7 +47,7 @@ public class AuditLogDAO {
             ps.setString(4, details);
             return ps.executeUpdate() > 0;
         } catch (SQLException e) {
-            System.err.println("AuditLogDAO.insert: " + e.getMessage());
+            logger.error("AuditLogDAO.insert failed for event {}: {}", event, e.getMessage(), e);
             return false;
         }
     }
@@ -67,8 +70,31 @@ public class AuditLogDAO {
                 }
             }
         } catch (SQLException e) {
-            System.err.println("AuditLogDAO.findRecent: " + e.getMessage());
+            logger.error("AuditLogDAO.findRecent failed: {}", e.getMessage(), e);
         }
         return rows;
+    }
+
+    public List<com.campuslink.models.AuditLog> findAll() {
+        List<com.campuslink.models.AuditLog> list = new ArrayList<>();
+        String sql = "SELECT * FROM audit_log ORDER BY audit_id DESC";
+        try (Connection conn = getConn();
+             Statement st = conn.createStatement();
+             ResultSet rs = st.executeQuery(sql)) {
+            while (rs.next()) {
+                com.campuslink.models.AuditLog log = new com.campuslink.models.AuditLog();
+                log.setAuditId(rs.getInt("audit_id"));
+                Timestamp ts = rs.getTimestamp("event_time");
+                if (ts != null) log.setEventTime(ts.toLocalDateTime());
+                log.setEvent(rs.getString("event"));
+                log.setUsername(rs.getString("username"));
+                log.setOutcome(rs.getString("outcome"));
+                log.setDetails(rs.getString("details"));
+                list.add(log);
+            }
+        } catch (SQLException e) {
+            logger.error("AuditLogDAO.findAll failed: {}", e.getMessage(), e);
+        }
+        return list;
     }
 }

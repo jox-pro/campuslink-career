@@ -40,7 +40,17 @@ mvn test
 ```
 Service-layer tests (`AuthServiceTest`, `StudentServiceTest`) run against mocked DAOs via Mockito — no database connection required for these to pass.
 
-## 5. Run
+**Troubleshooting Maven:** If Maven fails because of an inaccessible local repository path on your machine, ensure your user has full permissions to the `~/.m2/repository` directory or configure a different path in your global Maven `settings.xml`.
+
+## 5. Default Credentials
+A default administrator account is created by the schema:
+- **Username:** admin
+- **Password:** Admin@123
+- **Role:** ADMIN
+
+**Important:** You must change this password immediately after the first login. The application will force this change before allowing dashboard access.
+
+## 6. Run
 ```
 mvn javafx:run
 ```

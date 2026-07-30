@@ -6,6 +6,8 @@ import com.campuslink.models.Student;
 import com.campuslink.services.EmployerService;
 import com.campuslink.services.StudentService;
 import com.campuslink.utils.SessionManager;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import javafx.beans.property.SimpleIntegerProperty;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.collections.FXCollections;
@@ -16,6 +18,7 @@ import java.util.List;
 import java.util.Optional;
 
 public class ApplicationController {
+    private static final Logger logger = LoggerFactory.getLogger(ApplicationController.class);
 
     @FXML private TableView<Application> tableView;
     @FXML private TableColumn<Application, Integer> colId;
@@ -28,7 +31,11 @@ public class ApplicationController {
     @FXML private ComboBox<String> statusCombo;
     @FXML private Label statusLabel;
     @FXML private Label pageTitle;
+    @FXML private Label statusUpdateLabel;
     @FXML private Button btnWithdraw;
+    @FXML private Button btnUpdateStatus;
+    @FXML private Button btnViewProfile;
+    @FXML private Button btnDownloadCV;
 
     private final StudentService studentService = new StudentService();
     private final EmployerService employerService = new EmployerService();
@@ -63,15 +70,36 @@ public class ApplicationController {
         String role = SessionManager.getInstance().getRole();
         if ("STUDENT".equals(role)) {
             if (pageTitle != null) pageTitle.setText("My Applications");
-            if (btnWithdraw != null) btnWithdraw.setVisible(true);
-            if (statusCombo != null) { statusCombo.setVisible(false); statusCombo.setManaged(false); }
+            setManagedVisible(btnWithdraw, true);
+            setManagedVisible(btnUpdateStatus, false);
+            setManagedVisible(statusCombo, false);
+            setManagedVisible(statusUpdateLabel, false);
+            setManagedVisible(btnViewProfile, false);
+            setManagedVisible(btnDownloadCV, false);
         } else if ("EMPLOYER".equals(role)) {
             if (pageTitle != null) pageTitle.setText("Applicants");
-            if (btnWithdraw != null) { btnWithdraw.setVisible(false); btnWithdraw.setManaged(false); }
-            if (statusCombo != null) statusCombo.setVisible(true);
+            setManagedVisible(btnWithdraw, false);
+            setManagedVisible(btnUpdateStatus, true);
+            setManagedVisible(statusCombo, true);
+            setManagedVisible(statusUpdateLabel, true);
+            setManagedVisible(btnViewProfile, true);
+            setManagedVisible(btnDownloadCV, true);
         } else {
+            // ADMIN
             if (pageTitle != null) pageTitle.setText("All Applications");
-            if (btnWithdraw != null) { btnWithdraw.setVisible(false); btnWithdraw.setManaged(false); }
+            setManagedVisible(btnWithdraw, false);
+            setManagedVisible(btnUpdateStatus, true);
+            setManagedVisible(statusCombo, true);
+            setManagedVisible(statusUpdateLabel, true);
+            setManagedVisible(btnViewProfile, true);
+            setManagedVisible(btnDownloadCV, true);
+        }
+    }
+
+    private void setManagedVisible(javafx.scene.Node node, boolean value) {
+        if (node != null) {
+            node.setVisible(value);
+            node.setManaged(value);
         }
     }
 
@@ -109,7 +137,7 @@ public class ApplicationController {
             if (statusLabel != null) statusLabel.setText("Total: " + apps.size() + " applications");
         } catch (Exception e) {
             showAlert(Alert.AlertType.ERROR, "Error", "Failed to load applications: " + e.getMessage());
-            System.err.println("ApplicationController.loadApplications: " + e.getMessage());
+            logger.error("ApplicationController.loadApplications failed: {}", e.getMessage(), e);
         }
     }
 
@@ -153,6 +181,62 @@ public class ApplicationController {
     @FXML
     private void handleRefresh() {
         loadApplications();
+    }
+
+    @FXML
+    private void handleViewProfile() {
+        Application selected = tableView.getSelectionModel().getSelectedItem();
+        if (selected == null) { showAlert(Alert.AlertType.WARNING, "No Selection", "Please select an application."); return; }
+        
+        Student student = studentService.getById(selected.getStudentId());
+        if (student == null) {
+            showAlert(Alert.AlertType.ERROR, "Error", "Could not find student profile.");
+            return;
+        }
+        
+        // Show student details in an alert for now as a simple profile view
+        String details = "Full Name: " + student.getFullName() + "\n" +
+                         "Email: " + student.getEmail() + "\n" +
+                         "Phone: " + student.getPhone() + "\n" +
+                         "Course: " + student.getCourse() + "\n" +
+                         "Year: " + student.getYearOfStudy() + "\n" +
+                         "Skills: " + (student.getSkills() != null ? student.getSkills() : "None");
+        
+        showAlert(Alert.AlertType.INFORMATION, "Student Profile", details);
+    }
+
+    @FXML
+    private void handleDownloadCV() {
+        Application selected = tableView.getSelectionModel().getSelectedItem();
+        if (selected == null) { showAlert(Alert.AlertType.WARNING, "No Selection", "Please select an application."); return; }
+
+        Student student = studentService.getById(selected.getStudentId());
+        if (student == null || student.getCvPath() == null || student.getCvPath().isEmpty()) {
+            showAlert(Alert.AlertType.WARNING, "No CV", "This student has not uploaded a CV.");
+            return;
+        }
+
+        java.io.File file = new java.io.File(student.getCvPath());
+        if (!file.exists()) {
+            showAlert(Alert.AlertType.ERROR, "File Not Found", "The CV file could not be found on the server.");
+            return;
+        }
+
+        javafx.stage.FileChooser fileChooser = new javafx.stage.FileChooser();
+        fileChooser.setTitle("Save Student CV");
+        fileChooser.setInitialFileName(file.getName());
+        fileChooser.getExtensionFilters().add(new javafx.stage.FileChooser.ExtensionFilter("PDF Files", "*.pdf"));
+        
+        java.io.File dest = fileChooser.showSaveDialog(tableView.getScene().getWindow());
+        if (dest != null) {
+            try {
+                java.nio.file.Files.copy(file.toPath(), dest.toPath(), java.nio.file.StandardCopyOption.REPLACE_EXISTING);
+                showAlert(Alert.AlertType.INFORMATION, "Success", "CV saved to: " + dest.getAbsolutePath());
+            } catch (java.io.IOException e) {
+                logger.error("Error saving CV", e);
+                showAlert(Alert.AlertType.ERROR, "Error", "Failed to save CV: " + e.getMessage());
+            }
+        }
     }
 
     private void showAlert(Alert.AlertType type, String title, String content) {

@@ -2,6 +2,9 @@ package com.campuslink.controllers;
 
 import com.campuslink.services.ReportService;
 import com.campuslink.utils.SessionManager;
+import com.campuslink.utils.ViewNavigator;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Node;
@@ -15,7 +18,8 @@ import java.io.IOException;
 import java.util.Map;
 import java.util.Objects;
 
-public class AdminDashboardController {
+public class AdminDashboardController implements ViewNavigator {
+    private static final Logger logger = LoggerFactory.getLogger(AdminDashboardController.class);
 
     @FXML private StackPane contentArea;
     @FXML private Label lblCurrentUser;
@@ -26,6 +30,7 @@ public class AdminDashboardController {
     @FXML private Button btnInternships;
     @FXML private Button btnResources;
     @FXML private Button btnReports;
+    @FXML private Button btnAuditLogs;
 
     // Stats labels injected when DashboardHome.fxml is loaded
     @FXML private Label lblStudentCount;
@@ -41,6 +46,9 @@ public class AdminDashboardController {
 
     @FXML
     public void initialize() {
+        if (contentArea != null) {
+            SessionManager.getInstance().setViewNavigator(this);
+        }
         if (lblCurrentUser != null && SessionManager.getInstance().getCurrentUser() != null) {
             lblCurrentUser.setText("Logged in as: " + SessionManager.getInstance().getCurrentUser().getUsername());
         }
@@ -65,7 +73,7 @@ public class AdminDashboardController {
             if (lblPendingCount != null)     lblPendingCount.setText(String.valueOf(stats.getOrDefault("pendingApplications", 0)));
             if (lblAcceptedCount != null)    lblAcceptedCount.setText(String.valueOf(stats.getOrDefault("acceptedApplications", 0)));
         } catch (Exception e) {
-            System.err.println("Failed to load stats: " + e.getMessage());
+            logger.error("Failed to load stats: {}", e.getMessage(), e);
         }
     }
 
@@ -76,6 +84,7 @@ public class AdminDashboardController {
     @FXML private void handleInternships(){ loadView("/fxml/InternshipList.fxml"); setActive(btnInternships); }
     @FXML private void handleResources() { loadView("/fxml/ResourceList.fxml");  setActive(btnResources); }
     @FXML private void handleReports()   { loadView("/fxml/Reports.fxml");       setActive(btnReports); }
+    @FXML private void handleAuditLogs() { loadView("/fxml/AuditLog.fxml");      setActive(btnAuditLogs); }
 
     @FXML
     private void handleLogout() {
@@ -91,20 +100,23 @@ public class AdminDashboardController {
             stage.setResizable(false);
             stage.centerOnScreen();
         } catch (IOException e) {
-            System.err.println("Logout navigation error: " + e.getMessage());
+            logger.error("Logout navigation error: {}", e.getMessage(), e);
         }
     }
 
-    public void loadView(String fxmlPath) {
+    @Override
+    public <T> T loadView(String fxmlPath) {
         try {
             FXMLLoader loader = new FXMLLoader(getClass().getResource(fxmlPath));
             Node node = loader.load();
             contentArea.getChildren().setAll(node);
+            return loader.getController();
         } catch (IOException e) {
-            System.err.println("Failed to load view " + fxmlPath + ": " + e.getMessage());
+            logger.error("Failed to load view {}: {}", fxmlPath, e.getMessage(), e);
             Label errorLabel = new Label("Failed to load view: " + fxmlPath + "\n" + e.getMessage());
             errorLabel.setStyle("-fx-text-fill: red;");
             contentArea.getChildren().setAll(errorLabel);
+            return null;
         }
     }
 

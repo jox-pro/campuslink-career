@@ -12,6 +12,9 @@
     <Label text="Career Resources" styleClass="page-title"/>
 
     <HBox spacing="10" alignment="CENTER_LEFT">
+        <TextField fx:id="searchField" promptText="Search resources..." styleClass="search-field"
+                   onAction="#handleSearch"/>
+        <Button text="Search" styleClass="btn-secondary" onAction="#handleSearch"/>
         <Region HBox.hgrow="ALWAYS"/>
         <Button fx:id="btnAdd" text="Add Resource" styleClass="btn-success" onAction="#handleAdd"/>
         <Button fx:id="btnDelete" text="Delete" styleClass="btn-danger" onAction="#handleDelete"/>

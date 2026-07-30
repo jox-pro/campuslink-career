@@ -2,6 +2,8 @@ package com.campuslink.dao;
 
 import com.campuslink.models.Employer;
 import com.campuslink.utils.AppDataSource;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.sql.DataSource;
 
@@ -10,6 +12,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class EmployerDAO {
+    private static final Logger logger = LoggerFactory.getLogger(EmployerDAO.class);
     private final DataSource dataSource;
 
     public EmployerDAO() {
@@ -29,10 +32,18 @@ public class EmployerDAO {
     }
 
     public boolean create(Employer employer) {
+        try (Connection conn = getConn()) {
+            return create(employer, conn);
+        } catch (SQLException e) {
+            logger.error("EmployerDAO.create failed for employer {}: {}", employer.getCompanyName(), e.getMessage(), e);
+            return false;
+        }
+    }
+
+    public boolean create(Employer employer, Connection conn) throws SQLException {
         String sql = "INSERT INTO employers (user_id, company_name, contact_person, email, phone, address) " +
                      "VALUES (?, ?, ?, ?, ?, ?)";
-        try (Connection conn = getConn();
-             PreparedStatement ps = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
+        try (PreparedStatement ps = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
             ps.setInt(1, employer.getUserId());
             ps.setString(2, employer.getCompanyName());
             ps.setString(3, employer.getContactPerson());
@@ -46,7 +57,7 @@ public class EmployerDAO {
                 }
                 return true;
             }
-        } catch (SQLException e) { System.err.println("EmployerDAO.create: " + e.getMessage()); }
+        }
         return false;
     }
 
@@ -58,7 +69,9 @@ public class EmployerDAO {
             try (ResultSet rs = ps.executeQuery()) {
                 if (rs.next()) return mapRow(rs);
             }
-        } catch (SQLException e) { System.err.println("EmployerDAO.findById: " + e.getMessage()); }
+        } catch (SQLException e) {
+            logger.error("EmployerDAO.findById failed for ID {}: {}", employerId, e.getMessage(), e);
+        }
         return null;
     }
 
@@ -70,7 +83,9 @@ public class EmployerDAO {
             try (ResultSet rs = ps.executeQuery()) {
                 if (rs.next()) return mapRow(rs);
             }
-        } catch (SQLException e) { System.err.println("EmployerDAO.findByUserId: " + e.getMessage()); }
+        } catch (SQLException e) {
+            logger.error("EmployerDAO.findByUserId failed for user ID {}: {}", userId, e.getMessage(), e);
+        }
         return null;
     }
 
@@ -81,7 +96,9 @@ public class EmployerDAO {
              Statement st = conn.createStatement();
              ResultSet rs = st.executeQuery(sql)) {
             while (rs.next()) list.add(mapRow(rs));
-        } catch (SQLException e) { System.err.println("EmployerDAO.findAll: " + e.getMessage()); }
+        } catch (SQLException e) {
+            logger.error("EmployerDAO.findAll failed: {}", e.getMessage(), e);
+        }
         return list;
     }
 
@@ -97,7 +114,9 @@ public class EmployerDAO {
             ps.setString(5, employer.getAddress());
             ps.setInt(6, employer.getEmployerId());
             return ps.executeUpdate() > 0;
-        } catch (SQLException e) { System.err.println("EmployerDAO.update: " + e.getMessage()); }
+        } catch (SQLException e) {
+            logger.error("EmployerDAO.update failed for employer ID {}: {}", employer.getEmployerId(), e.getMessage(), e);
+        }
         return false;
     }
 
@@ -107,7 +126,9 @@ public class EmployerDAO {
              PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setInt(1, employerId);
             return ps.executeUpdate() > 0;
-        } catch (SQLException e) { System.err.println("EmployerDAO.delete: " + e.getMessage()); }
+        } catch (SQLException e) {
+            logger.error("EmployerDAO.delete failed for employer ID {}: {}", employerId, e.getMessage(), e);
+        }
         return false;
     }
 
@@ -122,7 +143,9 @@ public class EmployerDAO {
             try (ResultSet rs = ps.executeQuery()) {
                 while (rs.next()) list.add(mapRow(rs));
             }
-        } catch (SQLException e) { System.err.println("EmployerDAO.search: " + e.getMessage()); }
+        } catch (SQLException e) {
+            logger.error("EmployerDAO.search failed for keyword {}: {}", keyword, e.getMessage(), e);
+        }
         return list;
     }
 
@@ -132,7 +155,9 @@ public class EmployerDAO {
              Statement st = conn.createStatement();
              ResultSet rs = st.executeQuery(sql)) {
             if (rs.next()) return rs.getInt(1);
-        } catch (SQLException e) { System.err.println("EmployerDAO.count: " + e.getMessage()); }
+        } catch (SQLException e) {
+            logger.error("EmployerDAO.count failed: {}", e.getMessage(), e);
+        }
         return 0;
     }
 

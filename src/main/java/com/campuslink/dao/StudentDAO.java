@@ -2,6 +2,8 @@ package com.campuslink.dao;
 
 import com.campuslink.models.Student;
 import com.campuslink.utils.AppDataSource;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.sql.DataSource;
 
@@ -10,6 +12,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class StudentDAO {
+    private static final Logger logger = LoggerFactory.getLogger(StudentDAO.class);
     private final DataSource dataSource;
 
     public StudentDAO() {
@@ -29,10 +32,18 @@ public class StudentDAO {
     }
 
     public boolean create(Student student) {
+        try (Connection conn = getConn()) {
+            return create(student, conn);
+        } catch (SQLException e) {
+            logger.error("StudentDAO.create failed for student {}: {}", student.getFullName(), e.getMessage(), e);
+            return false;
+        }
+    }
+
+    public boolean create(Student student, Connection conn) throws SQLException {
         String sql = "INSERT INTO students (user_id, full_name, email, phone, course, year_of_study, skills, cv_path) " +
                      "VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
-        try (Connection conn = getConn();
-             PreparedStatement ps = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
+        try (PreparedStatement ps = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
             ps.setInt(1, student.getUserId());
             ps.setString(2, student.getFullName());
             ps.setString(3, student.getEmail());
@@ -48,7 +59,7 @@ public class StudentDAO {
                 }
                 return true;
             }
-        } catch (SQLException e) { System.err.println("StudentDAO.create: " + e.getMessage()); }
+        }
         return false;
     }
 
@@ -60,7 +71,9 @@ public class StudentDAO {
             try (ResultSet rs = ps.executeQuery()) {
                 if (rs.next()) return mapRow(rs);
             }
-        } catch (SQLException e) { System.err.println("StudentDAO.findById: " + e.getMessage()); }
+        } catch (SQLException e) {
+            logger.error("StudentDAO.findById failed for ID {}: {}", studentId, e.getMessage(), e);
+        }
         return null;
     }
 
@@ -72,7 +85,9 @@ public class StudentDAO {
             try (ResultSet rs = ps.executeQuery()) {
                 if (rs.next()) return mapRow(rs);
             }
-        } catch (SQLException e) { System.err.println("StudentDAO.findByUserId: " + e.getMessage()); }
+        } catch (SQLException e) {
+            logger.error("StudentDAO.findByUserId failed for user ID {}: {}", userId, e.getMessage(), e);
+        }
         return null;
     }
 
@@ -83,7 +98,9 @@ public class StudentDAO {
              Statement st = conn.createStatement();
              ResultSet rs = st.executeQuery(sql)) {
             while (rs.next()) list.add(mapRow(rs));
-        } catch (SQLException e) { System.err.println("StudentDAO.findAll: " + e.getMessage()); }
+        } catch (SQLException e) {
+            logger.error("StudentDAO.findAll failed: {}", e.getMessage(), e);
+        }
         return list;
     }
 
@@ -101,7 +118,9 @@ public class StudentDAO {
             ps.setString(7, student.getCvPath());
             ps.setInt(8, student.getStudentId());
             return ps.executeUpdate() > 0;
-        } catch (SQLException e) { System.err.println("StudentDAO.update: " + e.getMessage()); }
+        } catch (SQLException e) {
+            logger.error("StudentDAO.update failed for student ID {}: {}", student.getStudentId(), e.getMessage(), e);
+        }
         return false;
     }
 
@@ -111,7 +130,9 @@ public class StudentDAO {
              PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setInt(1, studentId);
             return ps.executeUpdate() > 0;
-        } catch (SQLException e) { System.err.println("StudentDAO.delete: " + e.getMessage()); }
+        } catch (SQLException e) {
+            logger.error("StudentDAO.delete failed for student ID {}: {}", studentId, e.getMessage(), e);
+        }
         return false;
     }
 
@@ -126,7 +147,9 @@ public class StudentDAO {
             try (ResultSet rs = ps.executeQuery()) {
                 while (rs.next()) list.add(mapRow(rs));
             }
-        } catch (SQLException e) { System.err.println("StudentDAO.search: " + e.getMessage()); }
+        } catch (SQLException e) {
+            logger.error("StudentDAO.search failed for keyword {}: {}", keyword, e.getMessage(), e);
+        }
         return list;
     }
 
@@ -136,7 +159,9 @@ public class StudentDAO {
              Statement st = conn.createStatement();
              ResultSet rs = st.executeQuery(sql)) {
             if (rs.next()) return rs.getInt(1);
-        } catch (SQLException e) { System.err.println("StudentDAO.count: " + e.getMessage()); }
+        } catch (SQLException e) {
+            logger.error("StudentDAO.count failed: {}", e.getMessage(), e);
+        }
         return 0;
     }
 

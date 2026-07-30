@@ -1,42 +1,65 @@
 package com.campuslink.services;
 
 import com.campuslink.dao.ApplicationDAO;
+import com.campuslink.dao.AuditLogDAO;
+import com.campuslink.dao.JobDAO;
+import com.campuslink.dao.InternshipDAO;
 import com.campuslink.dao.StudentDAO;
 import com.campuslink.models.Application;
 import com.campuslink.models.Student;
+import com.campuslink.utils.SessionManager;
 import com.campuslink.utils.ValidationUtil;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.time.LocalDate;
 import java.util.List;
 
 public class StudentService {
+    private static final Logger logger = LoggerFactory.getLogger(StudentService.class);
     private final StudentDAO studentDAO;
     private final ApplicationDAO applicationDAO;
+    private final JobDAO jobDAO;
+    private final InternshipDAO internshipDAO;
+    private final AuditLogDAO auditLogDAO;
 
     public StudentService() {
-        this(new StudentDAO(), new ApplicationDAO());
+        this(new StudentDAO(), new ApplicationDAO(), new JobDAO(), new InternshipDAO(), new AuditLogDAO());
     }
 
-    public StudentService(StudentDAO studentDAO, ApplicationDAO applicationDAO) {
+    public StudentService(StudentDAO studentDAO, ApplicationDAO applicationDAO, JobDAO jobDAO, InternshipDAO internshipDAO, AuditLogDAO auditLogDAO) {
         this.studentDAO = studentDAO;
         this.applicationDAO = applicationDAO;
+        this.jobDAO = jobDAO;
+        this.internshipDAO = internshipDAO;
+        this.auditLogDAO = auditLogDAO;
     }
 
     public boolean createProfile(Student student) {
         if (ValidationUtil.isNullOrEmpty(student.getFullName())) return false;
         if (!ValidationUtil.isValidEmail(student.getEmail())) return false;
         if (!ValidationUtil.isValidPhone(student.getPhone())) return false;
-        return studentDAO.create(student);
+        boolean created = studentDAO.create(student);
+        if (created) {
+            auditLogDAO.insert("profile-create", SessionManager.getInstance().getCurrentUser().getUsername(), "success", "student profile created");
+        }
+        return created;
     }
 
     public boolean updateProfile(Student student) {
+        AuthorizationService.checkOwnership(student.getUserId());
         if (ValidationUtil.isNullOrEmpty(student.getFullName())) return false;
         if (!ValidationUtil.isValidEmail(student.getEmail())) return false;
         if (!ValidationUtil.isValidPhone(student.getPhone())) return false;
-        return studentDAO.update(student);
+        boolean updated = studentDAO.update(student);
+        if (updated) {
+            auditLogDAO.insert("profile-update", SessionManager.getInstance().getCurrentUser().getUsername(), "success", "student profile updated");
+        }
+        return updated;
     }
 
     public Student getProfile(int userId) {
+        AuthorizationService.checkOwnership(userId);
         return studentDAO.findByUserId(userId);
     }
 
@@ -58,10 +81,34 @@ public class StudentService {
     }
 
     public boolean applyForOpportunity(int studentId, String type, int opportunityId) {
+        Student student = studentDAO.findById(studentId);
+        if (student == null) return false;
+        AuthorizationService.checkOwnership(student.getUserId());
+
+        // Check if opportunity exists and is not expired
+        LocalDate deadline = null;
+        if (type.equalsIgnoreCase("JOB")) {
+            com.campuslink.models.Job job = jobDAO.findById(opportunityId);
+            if (job == null) return false;
+            deadline = job.getDeadline();
+        } else if (type.equalsIgnoreCase("INTERNSHIP")) {
+            com.campuslink.models.Internship internship = internshipDAO.findById(opportunityId);
+            if (internship == null) return false;
+            deadline = internship.getDeadline();
+        } else {
+            return false;
+        }
+
+        if (deadline != null && deadline.isBefore(LocalDate.now())) {
+            return false; // Expired
+        }
+
         // Check for duplicate application
-        List<Application> existing = applicationDAO.findByOpportunity(type, opportunityId);
+        List<Application> existing = applicationDAO.findByStudent(studentId);
         for (Application a : existing) {
-            if (a.getStudentId() == studentId) return false; // already applied
+            if (a.getOpportunityType().equalsIgnoreCase(type) && a.getOpportunityId() == opportunityId) {
+                return false; // already applied
+            }
         }
         Application app = new Application();
         app.setStudentId(studentId);
@@ -69,14 +116,65 @@ public class StudentService {
         app.setOpportunityId(opportunityId);
         app.setApplicationDate(LocalDate.now());
         app.setStatus("PENDING");
-        return applicationDAO.create(app);
+        boolean created = applicationDAO.create(app);
+        if (created) {
+            auditLogDAO.insert("apply", SessionManager.getInstance().getCurrentUser().getUsername(), "success", type + " ID: " + opportunityId);
+        }
+        return created;
     }
 
     public boolean withdrawApplication(int applicationId) {
-        return applicationDAO.delete(applicationId);
+        Application app = applicationDAO.findById(applicationId);
+        if (app == null) return false;
+        Student student = studentDAO.findById(app.getStudentId());
+        if (student == null) return false;
+        AuthorizationService.checkOwnership(student.getUserId());
+
+        boolean deleted = applicationDAO.delete(applicationId);
+        if (deleted) {
+            auditLogDAO.insert("withdraw", SessionManager.getInstance().getCurrentUser().getUsername(), "success", "Application ID: " + applicationId);
+        }
+        return deleted;
     }
 
     public List<Application> getStudentApplications(int studentId) {
         return applicationDAO.findByStudent(studentId);
+    }
+
+    public boolean uploadCV(int studentId, java.io.File file) {
+        Student student = studentDAO.findById(studentId);
+        if (student == null) return false;
+        AuthorizationService.checkOwnership(student.getUserId());
+
+        // Validation: max 5MB, PDF only
+        if (file.length() > 5 * 1024 * 1024) return false;
+        if (!file.getName().toLowerCase().endsWith(".pdf")) return false;
+
+        String storageDir = "storage/cvs/";
+        java.io.File dir = new java.io.File(storageDir);
+        if (!dir.exists()) dir.mkdirs();
+
+        String fileName = "cv_" + studentId + "_" + System.currentTimeMillis() + ".pdf";
+        java.io.File dest = new java.io.File(dir, fileName);
+
+        try {
+            java.nio.file.Files.copy(file.toPath(), dest.toPath(), java.nio.file.StandardCopyOption.REPLACE_EXISTING);
+            
+            // Delete old CV if exists
+            if (student.getCvPath() != null) {
+                java.io.File oldFile = new java.io.File(student.getCvPath());
+                if (oldFile.exists()) oldFile.delete();
+            }
+
+            student.setCvPath(dest.getAbsolutePath());
+            boolean updated = studentDAO.update(student);
+            if (updated) {
+                auditLogDAO.insert("cv-upload", SessionManager.getInstance().getCurrentUser().getUsername(), "success", "CV uploaded: " + fileName);
+            }
+            return updated;
+        } catch (java.io.IOException e) {
+            logger.error("CV upload failed for student ID {}: {}", studentId, e.getMessage(), e);
+            return false;
+        }
     }
 }

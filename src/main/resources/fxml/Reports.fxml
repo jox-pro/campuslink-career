@@ -44,11 +44,30 @@
             <Label fx:id="lblAccepted" text="0" styleClass="stat-card-value"/>
             <Label text="Accepted" styleClass="stat-card-label"/>
         </VBox>
+        <VBox styleClass="stat-card, stat-card-blue" spacing="6" minWidth="150">
+            <Label fx:id="lblReviewed" text="0" styleClass="stat-card-value"/>
+            <Label text="Reviewed" styleClass="stat-card-label"/>
+        </VBox>
+        <VBox styleClass="stat-card, stat-card-orange" spacing="6" minWidth="150">
+            <Label fx:id="lblRejected" text="0" styleClass="stat-card-value"/>
+            <Label text="Rejected" styleClass="stat-card-label"/>
+        </VBox>
     </HBox>
+
+    <VBox spacing="10" styleClass="section-card">
+        <Label text="Export Application CSV" styleClass="section-title"/>
+        <HBox spacing="10" alignment="CENTER_LEFT">
+            <Label text="From:"/>
+            <DatePicker fx:id="startDate"/>
+            <Label text="To:"/>
+            <DatePicker fx:id="endDate"/>
+            <Button text="Export CSV" styleClass="btn-success" onAction="#handleExportCSV"/>
+        </HBox>
+    </VBox>
 
     <HBox spacing="10">
         <Button text="Refresh Stats" styleClass="btn-primary" onAction="#handleRefresh"/>
-        <Button text="Export Report (TXT)" styleClass="btn-secondary" onAction="#handleExport"/>
+        <Button text="Export Summary (TXT)" styleClass="btn-secondary" onAction="#handleExport"/>
     </HBox>
 
     <Label fx:id="exportStatus" styleClass="success-label"/>

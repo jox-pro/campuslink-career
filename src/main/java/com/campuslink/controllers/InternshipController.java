@@ -6,6 +6,7 @@ import com.campuslink.models.Student;
 import com.campuslink.services.EmployerService;
 import com.campuslink.services.StudentService;
 import com.campuslink.utils.SessionManager;
+import com.campuslink.utils.ViewNavigator;
 import javafx.beans.property.SimpleIntegerProperty;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.collections.FXCollections;
@@ -26,6 +27,7 @@ public class InternshipController {
     @FXML private TableColumn<Internship, String> colDeadline;
     @FXML private TableColumn<Internship, String> colDescription;
     @FXML private TextField searchField;
+    @FXML private ComboBox<String> filterStatus;
     @FXML private Label statusLabel;
     @FXML private Label pageTitle;
     @FXML private Button btnApply;
@@ -51,6 +53,10 @@ public class InternshipController {
         String role = SessionManager.getInstance().getRole();
         if (tableView != null) {
             initTableColumns();
+            if (filterStatus != null) {
+                filterStatus.setItems(FXCollections.observableArrayList("All Status", "Active", "Expired"));
+                filterStatus.setValue("All Status");
+            }
             configureForRole(role);
             loadInternships(role);
         } else if (fieldTitle != null) {
@@ -113,6 +119,17 @@ public class InternshipController {
         if (searchField == null) return;
         String keyword = searchField.getText();
         List<Internship> results = employerService.searchInternships(keyword);
+
+        // Filter by status if needed
+        if (filterStatus != null) {
+            String status = filterStatus.getValue();
+            if ("Active".equals(status)) {
+                results = results.stream().filter(i -> i.getDeadline() == null || !i.getDeadline().isBefore(LocalDate.now())).toList();
+            } else if ("Expired".equals(status)) {
+                results = results.stream().filter(i -> i.getDeadline() != null && i.getDeadline().isBefore(LocalDate.now())).toList();
+            }
+        }
+
         tableView.setItems(FXCollections.observableArrayList(results));
         if (statusLabel != null) statusLabel.setText("Found: " + results.size() + " internships");
     }
@@ -120,6 +137,7 @@ public class InternshipController {
     @FXML
     private void handleClearSearch() {
         if (searchField != null) searchField.clear();
+        if (filterStatus != null) filterStatus.setValue("All Status");
         loadInternships(SessionManager.getInstance().getRole());
     }
 
@@ -146,9 +164,14 @@ public class InternshipController {
 
     @FXML
     private void handleAdd() {
-        editingInternship = null;
-        clearForm();
-        if (formTitle != null) formTitle.setText("Post a New Internship");
+        ViewNavigator nav = SessionManager.getInstance().getViewNavigator();
+        if (nav != null) {
+            nav.loadView("/fxml/InternshipForm.fxml");
+        } else {
+            editingInternship = null;
+            clearForm();
+            if (formTitle != null) formTitle.setText("Post a New Internship");
+        }
     }
 
     @FXML
@@ -156,9 +179,26 @@ public class InternshipController {
         if (tableView == null) return;
         Internship selected = tableView.getSelectionModel().getSelectedItem();
         if (selected == null) { showAlert(Alert.AlertType.WARNING, "No Selection", "Please select an internship to edit."); return; }
-        editingInternship = selected;
-        populateForm(selected);
-        if (formTitle != null) formTitle.setText("Edit Internship");
+        
+        ViewNavigator nav = SessionManager.getInstance().getViewNavigator();
+        if (nav != null) {
+            InternshipController controller = nav.loadView("/fxml/InternshipForm.fxml");
+            if (controller != null) {
+                controller.setEditingInternship(selected);
+            }
+        } else {
+            editingInternship = selected;
+            populateForm(selected);
+            if (formTitle != null) formTitle.setText("Edit Internship");
+        }
+    }
+
+    public void setEditingInternship(Internship internship) {
+        this.editingInternship = internship;
+        if (internship != null && fieldTitle != null) {
+            populateForm(internship);
+            if (formTitle != null) formTitle.setText("Edit Internship");
+        }
     }
 
     @FXML

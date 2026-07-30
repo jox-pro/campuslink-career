@@ -2,6 +2,8 @@ package com.campuslink.dao;
 
 import com.campuslink.models.Resource;
 import com.campuslink.utils.AppDataSource;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.sql.DataSource;
 
@@ -10,6 +12,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class ResourceDAO {
+    private static final Logger logger = LoggerFactory.getLogger(ResourceDAO.class);
     private final DataSource dataSource;
 
     public ResourceDAO() {
@@ -42,7 +45,9 @@ public class ResourceDAO {
                 }
                 return true;
             }
-        } catch (SQLException e) { System.err.println("ResourceDAO.create: " + e.getMessage()); }
+        } catch (SQLException e) {
+            logger.error("ResourceDAO.create failed for resource {}: {}", resource.getTitle(), e.getMessage(), e);
+        }
         return false;
     }
 
@@ -54,7 +59,9 @@ public class ResourceDAO {
             try (ResultSet rs = ps.executeQuery()) {
                 if (rs.next()) return mapRow(rs);
             }
-        } catch (SQLException e) { System.err.println("ResourceDAO.findById: " + e.getMessage()); }
+        } catch (SQLException e) {
+            logger.error("ResourceDAO.findById failed for ID {}: {}", resourceId, e.getMessage(), e);
+        }
         return null;
     }
 
@@ -65,7 +72,9 @@ public class ResourceDAO {
              Statement st = conn.createStatement();
              ResultSet rs = st.executeQuery(sql)) {
             while (rs.next()) list.add(mapRow(rs));
-        } catch (SQLException e) { System.err.println("ResourceDAO.findAll: " + e.getMessage()); }
+        } catch (SQLException e) {
+            logger.error("ResourceDAO.findAll failed: {}", e.getMessage(), e);
+        }
         return list;
     }
 
@@ -78,7 +87,9 @@ public class ResourceDAO {
             ps.setString(3, resource.getFilePath());
             ps.setInt(4, resource.getResourceId());
             return ps.executeUpdate() > 0;
-        } catch (SQLException e) { System.err.println("ResourceDAO.update: " + e.getMessage()); }
+        } catch (SQLException e) {
+            logger.error("ResourceDAO.update failed for resource ID {}: {}", resource.getResourceId(), e.getMessage(), e);
+        }
         return false;
     }
 
@@ -88,8 +99,27 @@ public class ResourceDAO {
              PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setInt(1, resourceId);
             return ps.executeUpdate() > 0;
-        } catch (SQLException e) { System.err.println("ResourceDAO.delete: " + e.getMessage()); }
+        } catch (SQLException e) {
+            logger.error("ResourceDAO.delete failed for resource ID {}: {}", resourceId, e.getMessage(), e);
+        }
         return false;
+    }
+
+    public List<Resource> search(String keyword) {
+        List<Resource> list = new ArrayList<>();
+        String sql = "SELECT * FROM resources WHERE title LIKE ? OR description LIKE ? ORDER BY uploaded_at DESC";
+        String pattern = "%" + keyword + "%";
+        try (Connection conn = getConn();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, pattern);
+            ps.setString(2, pattern);
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) list.add(mapRow(rs));
+            }
+        } catch (SQLException e) {
+            logger.error("ResourceDAO.search failed for keyword {}: {}", keyword, e.getMessage(), e);
+        }
+        return list;
     }
 
     public int count() {
@@ -98,7 +128,9 @@ public class ResourceDAO {
              Statement st = conn.createStatement();
              ResultSet rs = st.executeQuery(sql)) {
             if (rs.next()) return rs.getInt(1);
-        } catch (SQLException e) { System.err.println("ResourceDAO.count: " + e.getMessage()); }
+        } catch (SQLException e) {
+            logger.error("ResourceDAO.count failed: {}", e.getMessage(), e);
+        }
         return 0;
     }
 

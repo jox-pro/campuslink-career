@@ -41,6 +41,9 @@
                 <Hyperlink fx:id="registerLink" text="New Student? Register Here"
                            onAction="#handleRegister"
                            style="-fx-text-fill: #1565C0; -fx-font-size: 13px;"/>
+                <Hyperlink text="Employer Registration"
+                           onAction="#handleEmployerRegister"
+                           style="-fx-text-fill: #1565C0; -fx-font-size: 13px;"/>
             </VBox>
         </VBox>
     </center>

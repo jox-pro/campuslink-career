@@ -89,7 +89,12 @@ public class AppDataSource implements DataSource {
             throw new IllegalStateException("Database username must be configured via DB_USERNAME or db.properties");
         }
 
-        return new AppDataSource(url.trim(), username.trim(), password != null ? password : "", driverClassName);
+        return new AppDataSource(
+            url.trim(),
+            username.trim(),
+            password != null ? password : "",
+            driverClassName != null ? driverClassName.trim() : null
+        );
     }
 
     private static String getEnvOrProperty(String envName, String propValue) {

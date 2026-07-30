@@ -5,6 +5,7 @@ import com.campuslink.models.User;
 public class SessionManager {
     private static volatile SessionManager instance;
     private volatile User currentUser;
+    private ViewNavigator viewNavigator;
 
     private SessionManager() {}
 
@@ -29,7 +30,16 @@ public class SessionManager {
 
     public synchronized void logout() {
         currentUser = null;
+        viewNavigator = null;
         // No shared connection to close anymore: AppDataSource hands out a fresh
         // Connection per call, and every DAO closes its own via try-with-resources.
+    }
+
+    public synchronized ViewNavigator getViewNavigator() {
+        return viewNavigator;
+    }
+
+    public synchronized void setViewNavigator(ViewNavigator viewNavigator) {
+        this.viewNavigator = viewNavigator;
     }
 }

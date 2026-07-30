@@ -2,6 +2,8 @@ package com.campuslink.dao;
 
 import com.campuslink.models.Application;
 import com.campuslink.utils.AppDataSource;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.sql.DataSource;
 
@@ -10,6 +12,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class ApplicationDAO {
+    private static final Logger logger = LoggerFactory.getLogger(ApplicationDAO.class);
     private final DataSource dataSource;
 
     public ApplicationDAO() {
@@ -45,7 +48,9 @@ public class ApplicationDAO {
                 }
                 return true;
             }
-        } catch (SQLException e) { System.err.println("ApplicationDAO.create: " + e.getMessage()); }
+        } catch (SQLException e) {
+            logger.error("ApplicationDAO.create failed: {}", e.getMessage(), e);
+        }
         return false;
     }
 
@@ -57,14 +62,23 @@ public class ApplicationDAO {
             try (ResultSet rs = ps.executeQuery()) {
                 if (rs.next()) return mapRow(rs);
             }
-        } catch (SQLException e) { System.err.println("ApplicationDAO.findById: " + e.getMessage()); }
+        } catch (SQLException e) {
+            logger.error("ApplicationDAO.findById failed for ID {}: {}", applicationId, e.getMessage(), e);
+        }
         return null;
     }
 
     public List<Application> findByStudent(int studentId) {
         List<Application> list = new ArrayList<>();
-        String sql = "SELECT a.*, s.full_name as student_name FROM applications a " +
+        String sql = "SELECT a.*, s.full_name as student_name, " +
+                     "COALESCE(j.title, i.title) as opportunity_title, " +
+                     "COALESCE(ej.company_name, ei.company_name) as company_name " +
+                     "FROM applications a " +
                      "JOIN students s ON a.student_id = s.student_id " +
+                     "LEFT JOIN jobs j ON a.opportunity_type = 'JOB' AND a.opportunity_id = j.job_id " +
+                     "LEFT JOIN employers ej ON j.employer_id = ej.employer_id " +
+                     "LEFT JOIN internships i ON a.opportunity_type = 'INTERNSHIP' AND a.opportunity_id = i.internship_id " +
+                     "LEFT JOIN employers ei ON i.employer_id = ei.employer_id " +
                      "WHERE a.student_id = ? ORDER BY a.application_date DESC";
         try (Connection conn = getConn();
              PreparedStatement ps = conn.prepareStatement(sql)) {
@@ -73,19 +87,28 @@ public class ApplicationDAO {
                 while (rs.next()) {
                     Application app = mapRow(rs);
                     app.setStudentName(rs.getString("student_name"));
-                    // Fetch opportunity title
-                    enrichOpportunityTitle(app);
+                    app.setOpportunityTitle(rs.getString("opportunity_title"));
+                    app.setCompanyName(rs.getString("company_name"));
                     list.add(app);
                 }
             }
-        } catch (SQLException e) { System.err.println("ApplicationDAO.findByStudent: " + e.getMessage()); }
+        } catch (SQLException e) {
+            logger.error("ApplicationDAO.findByStudent failed for student ID {}: {}", studentId, e.getMessage(), e);
+        }
         return list;
     }
 
     public List<Application> findByOpportunity(String type, int opportunityId) {
         List<Application> list = new ArrayList<>();
-        String sql = "SELECT a.*, s.full_name as student_name FROM applications a " +
+        String sql = "SELECT a.*, s.full_name as student_name, " +
+                     "COALESCE(j.title, i.title) as opportunity_title, " +
+                     "COALESCE(ej.company_name, ei.company_name) as company_name " +
+                     "FROM applications a " +
                      "JOIN students s ON a.student_id = s.student_id " +
+                     "LEFT JOIN jobs j ON a.opportunity_type = 'JOB' AND a.opportunity_id = j.job_id " +
+                     "LEFT JOIN employers ej ON j.employer_id = ej.employer_id " +
+                     "LEFT JOIN internships i ON a.opportunity_type = 'INTERNSHIP' AND a.opportunity_id = i.internship_id " +
+                     "LEFT JOIN employers ei ON i.employer_id = ei.employer_id " +
                      "WHERE a.opportunity_type = ? AND a.opportunity_id = ? ORDER BY a.application_date DESC";
         try (Connection conn = getConn();
              PreparedStatement ps = conn.prepareStatement(sql)) {
@@ -95,18 +118,28 @@ public class ApplicationDAO {
                 while (rs.next()) {
                     Application app = mapRow(rs);
                     app.setStudentName(rs.getString("student_name"));
-                    enrichOpportunityTitle(app);
+                    app.setOpportunityTitle(rs.getString("opportunity_title"));
+                    app.setCompanyName(rs.getString("company_name"));
                     list.add(app);
                 }
             }
-        } catch (SQLException e) { System.err.println("ApplicationDAO.findByOpportunity: " + e.getMessage()); }
+        } catch (SQLException e) {
+            logger.error("ApplicationDAO.findByOpportunity failed for type {} and ID {}: {}", type, opportunityId, e.getMessage(), e);
+        }
         return list;
     }
 
     public List<Application> findAll() {
         List<Application> list = new ArrayList<>();
-        String sql = "SELECT a.*, s.full_name as student_name FROM applications a " +
+        String sql = "SELECT a.*, s.full_name as student_name, " +
+                     "COALESCE(j.title, i.title) as opportunity_title, " +
+                     "COALESCE(ej.company_name, ei.company_name) as company_name " +
+                     "FROM applications a " +
                      "JOIN students s ON a.student_id = s.student_id " +
+                     "LEFT JOIN jobs j ON a.opportunity_type = 'JOB' AND a.opportunity_id = j.job_id " +
+                     "LEFT JOIN employers ej ON j.employer_id = ej.employer_id " +
+                     "LEFT JOIN internships i ON a.opportunity_type = 'INTERNSHIP' AND a.opportunity_id = i.internship_id " +
+                     "LEFT JOIN employers ei ON i.employer_id = ei.employer_id " +
                      "ORDER BY a.application_date DESC";
         try (Connection conn = getConn();
              Statement st = conn.createStatement();
@@ -114,10 +147,13 @@ public class ApplicationDAO {
             while (rs.next()) {
                 Application app = mapRow(rs);
                 app.setStudentName(rs.getString("student_name"));
-                enrichOpportunityTitle(app);
+                app.setOpportunityTitle(rs.getString("opportunity_title"));
+                app.setCompanyName(rs.getString("company_name"));
                 list.add(app);
             }
-        } catch (SQLException e) { System.err.println("ApplicationDAO.findAll: " + e.getMessage()); }
+        } catch (SQLException e) {
+            logger.error("ApplicationDAO.findAll failed: {}", e.getMessage(), e);
+        }
         return list;
     }
 
@@ -133,7 +169,9 @@ public class ApplicationDAO {
             ps.setString(5, app.getStatus());
             ps.setInt(6, app.getApplicationId());
             return ps.executeUpdate() > 0;
-        } catch (SQLException e) { System.err.println("ApplicationDAO.update: " + e.getMessage()); }
+        } catch (SQLException e) {
+            logger.error("ApplicationDAO.update failed for application ID {}: {}", app.getApplicationId(), e.getMessage(), e);
+        }
         return false;
     }
 
@@ -143,7 +181,9 @@ public class ApplicationDAO {
              PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setInt(1, applicationId);
             return ps.executeUpdate() > 0;
-        } catch (SQLException e) { System.err.println("ApplicationDAO.delete: " + e.getMessage()); }
+        } catch (SQLException e) {
+            logger.error("ApplicationDAO.delete failed for application ID {}: {}", applicationId, e.getMessage(), e);
+        }
         return false;
     }
 
@@ -154,7 +194,9 @@ public class ApplicationDAO {
             ps.setString(1, status);
             ps.setInt(2, applicationId);
             return ps.executeUpdate() > 0;
-        } catch (SQLException e) { System.err.println("ApplicationDAO.updateStatus: " + e.getMessage()); }
+        } catch (SQLException e) {
+            logger.error("ApplicationDAO.updateStatus failed for application ID {}: {}", applicationId, e.getMessage(), e);
+        }
         return false;
     }
 
@@ -166,7 +208,9 @@ public class ApplicationDAO {
             try (ResultSet rs = ps.executeQuery()) {
                 if (rs.next()) return rs.getInt(1);
             }
-        } catch (SQLException e) { System.err.println("ApplicationDAO.countByStatus: " + e.getMessage()); }
+        } catch (SQLException e) {
+            logger.error("ApplicationDAO.countByStatus failed for status {}: {}", status, e.getMessage(), e);
+        }
         return 0;
     }
 
@@ -176,38 +220,10 @@ public class ApplicationDAO {
              Statement st = conn.createStatement();
              ResultSet rs = st.executeQuery(sql)) {
             if (rs.next()) return rs.getInt(1);
-        } catch (SQLException e) { System.err.println("ApplicationDAO.count: " + e.getMessage()); }
+        } catch (SQLException e) {
+            logger.error("ApplicationDAO.count failed: {}", e.getMessage(), e);
+        }
         return 0;
-    }
-
-    private void enrichOpportunityTitle(Application app) {
-        try {
-            if ("JOB".equalsIgnoreCase(app.getOpportunityType())) {
-                String sql = "SELECT j.title, e.company_name FROM jobs j LEFT JOIN employers e ON j.employer_id = e.employer_id WHERE j.job_id = ?";
-                try (Connection conn = getConn();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
-                    ps.setInt(1, app.getOpportunityId());
-                    try (ResultSet rs = ps.executeQuery()) {
-                        if (rs.next()) {
-                            app.setOpportunityTitle(rs.getString("title"));
-                            app.setCompanyName(rs.getString("company_name"));
-                        }
-                    }
-                }
-            } else if ("INTERNSHIP".equalsIgnoreCase(app.getOpportunityType())) {
-                String sql = "SELECT i.title, e.company_name FROM internships i LEFT JOIN employers e ON i.employer_id = e.employer_id WHERE i.internship_id = ?";
-                try (Connection conn = getConn();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
-                    ps.setInt(1, app.getOpportunityId());
-                    try (ResultSet rs = ps.executeQuery()) {
-                        if (rs.next()) {
-                            app.setOpportunityTitle(rs.getString("title"));
-                            app.setCompanyName(rs.getString("company_name"));
-                        }
-                    }
-                }
-            }
-        } catch (SQLException e) { System.err.println("ApplicationDAO.enrichOpportunityTitle: " + e.getMessage()); }
     }
 
     private Application mapRow(ResultSet rs) throws SQLException {

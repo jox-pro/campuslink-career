@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.control.*?>
+<?import javafx.geometry.Insets?>
+
+<VBox xmlns="http://javafx.com/javafx/17"
+      xmlns:fx="http://javafx.com/fxml/1"
+      fx:controller="com.campuslink.controllers.AuditLogController"
+      spacing="16" styleClass="content-area">
+
+    <Label text="System Audit Logs" styleClass="page-title"/>
+
+    <HBox spacing="10" alignment="CENTER_LEFT">
+        <TextField fx:id="searchField" promptText="Search logs..." styleClass="search-field"
+                   onAction="#handleSearch"/>
+        <Button text="Search" styleClass="btn-secondary" onAction="#handleSearch"/>
+        <Region HBox.hgrow="ALWAYS"/>
+        <Button text="Refresh" styleClass="btn-secondary" onAction="#handleRefresh"/>
+    </HBox>
+
+    <TableView fx:id="tableView" VBox.vgrow="ALWAYS" styleClass="section-card">
+        <columns>
+            <TableColumn fx:id="colId" text="ID" prefWidth="60"/>
+            <TableColumn fx:id="colTime" text="Time" prefWidth="180"/>
+            <TableColumn fx:id="colEvent" text="Event" prefWidth="140"/>
+            <TableColumn fx:id="colUser" text="User" prefWidth="120"/>
+            <TableColumn fx:id="colOutcome" text="Outcome" prefWidth="100"/>
+            <TableColumn fx:id="colDetails" text="Details" prefWidth="300"/>
+        </columns>
+        <placeholder><Label text="No audit logs found."/></placeholder>
+    </TableView>
+
+    <Label fx:id="statusLabel" styleClass="page-subtitle"/>
+
+</VBox>

@@ -6,6 +6,7 @@ import com.campuslink.models.Student;
 import com.campuslink.services.EmployerService;
 import com.campuslink.services.StudentService;
 import com.campuslink.utils.SessionManager;
+import com.campuslink.utils.ViewNavigator;
 import javafx.beans.property.SimpleIntegerProperty;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.collections.FXCollections;
@@ -31,6 +32,7 @@ public class JobController {
     @FXML private TableColumn<Job, String> colDeadline;
     @FXML private TableColumn<Job, String> colDescription;
     @FXML private TextField searchField;
+    @FXML private ComboBox<String> filterStatus;
     @FXML private Label statusLabel;
     @FXML private Label pageTitle;
     @FXML private Button btnApply;
@@ -56,6 +58,10 @@ public class JobController {
         String role = SessionManager.getInstance().getRole();
         if (tableView != null) {
             initTableColumns();
+            if (filterStatus != null) {
+                filterStatus.setItems(FXCollections.observableArrayList("All Status", "Active", "Expired"));
+                filterStatus.setValue("All Status");
+            }
             configureForRole(role);
             loadJobs(role);
         } else if (fieldTitle != null) {
@@ -128,6 +134,17 @@ public class JobController {
         if (searchField == null) return;
         String keyword = searchField.getText();
         List<Job> results = employerService.searchJobs(keyword);
+        
+        // Filter by status if needed
+        if (filterStatus != null) {
+            String status = filterStatus.getValue();
+            if ("Active".equals(status)) {
+                results = results.stream().filter(j -> j.getDeadline() == null || !j.getDeadline().isBefore(LocalDate.now())).toList();
+            } else if ("Expired".equals(status)) {
+                results = results.stream().filter(j -> j.getDeadline() != null && j.getDeadline().isBefore(LocalDate.now())).toList();
+            }
+        }
+        
         tableView.setItems(FXCollections.observableArrayList(results));
         if (statusLabel != null) statusLabel.setText("Found: " + results.size() + " jobs");
     }
@@ -135,6 +152,7 @@ public class JobController {
     @FXML
     private void handleClearSearch() {
         if (searchField != null) searchField.clear();
+        if (filterStatus != null) filterStatus.setValue("All Status");
         loadJobs(SessionManager.getInstance().getRole());
     }
 
@@ -162,10 +180,15 @@ public class JobController {
 
     @FXML
     private void handleAdd() {
-        editingJob = null;
-        clearForm();
-        if (formTitle != null) formTitle.setText("Post a New Job");
-        if (btnSave != null) btnSave.setText("Post Job");
+        ViewNavigator nav = SessionManager.getInstance().getViewNavigator();
+        if (nav != null) {
+            nav.loadView("/fxml/JobForm.fxml");
+        } else {
+            editingJob = null;
+            clearForm();
+            if (formTitle != null) formTitle.setText("Post a New Job");
+            if (btnSave != null) btnSave.setText("Post Job");
+        }
     }
 
     @FXML
@@ -173,10 +196,28 @@ public class JobController {
         if (tableView == null) return;
         Job selected = tableView.getSelectionModel().getSelectedItem();
         if (selected == null) { showAlert(Alert.AlertType.WARNING, "No Selection", "Please select a job to edit."); return; }
-        editingJob = selected;
-        populateForm(selected);
-        if (formTitle != null) formTitle.setText("Edit Job");
-        if (btnSave != null) btnSave.setText("Update Job");
+        
+        ViewNavigator nav = SessionManager.getInstance().getViewNavigator();
+        if (nav != null) {
+            JobController controller = nav.loadView("/fxml/JobForm.fxml");
+            if (controller != null) {
+                controller.setEditingJob(selected);
+            }
+        } else {
+            editingJob = selected;
+            populateForm(selected);
+            if (formTitle != null) formTitle.setText("Edit Job");
+            if (btnSave != null) btnSave.setText("Update Job");
+        }
+    }
+
+    public void setEditingJob(Job job) {
+        this.editingJob = job;
+        if (job != null && fieldTitle != null) {
+            populateForm(job);
+            if (formTitle != null) formTitle.setText("Edit Job");
+            if (btnSave != null) btnSave.setText("Update Job");
+        }
     }
 
     @FXML

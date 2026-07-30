@@ -1,39 +1,37 @@
 package com.campuslink.controllers;
 
-import com.campuslink.models.Student;
+import com.campuslink.models.Employer;
 import com.campuslink.models.User;
 import com.campuslink.services.AuthService;
-import com.campuslink.services.StudentService;
 import com.campuslink.utils.ValidationUtil;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Scene;
-import javafx.scene.control.Hyperlink;
 import javafx.scene.control.Label;
 import javafx.scene.control.PasswordField;
+import javafx.scene.control.TextArea;
 import javafx.scene.control.TextField;
 import javafx.stage.Stage;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.util.Objects;
 
-public class RegisterController {
-    private static final Logger logger = LoggerFactory.getLogger(RegisterController.class);
+public class EmployerRegisterController {
+    private static final Logger logger = LoggerFactory.getLogger(EmployerRegisterController.class);
 
     @FXML private TextField usernameField;
     @FXML private PasswordField passwordField;
     @FXML private PasswordField confirmPasswordField;
-    @FXML private TextField fullNameField;
+    @FXML private TextField companyNameField;
+    @FXML private TextField contactPersonField;
     @FXML private TextField emailField;
     @FXML private TextField phoneField;
-    @FXML private TextField courseField;
-    @FXML private TextField yearField;
+    @FXML private TextArea addressArea;
     @FXML private Label messageLabel;
 
     private final AuthService authService = new AuthService();
-    private final StudentService studentService = new StudentService();
 
     @FXML
     public void initialize() {
@@ -46,61 +44,44 @@ public class RegisterController {
         String username = usernameField.getText();
         String password = passwordField.getText();
         String confirmPassword = confirmPasswordField.getText();
-        String fullName = fullNameField.getText();
+        String companyName = companyNameField.getText();
         String email = emailField.getText();
+        String contactPerson = contactPersonField.getText();
         String phone = phoneField.getText();
-        String course = courseField.getText();
-        String yearStr = yearField.getText();
+        String address = addressArea.getText();
 
-        // Validation
         if (ValidationUtil.isNullOrEmpty(username)) { showMessage("Username is required.", true); return; }
         if (ValidationUtil.isNullOrEmpty(password)) { showMessage("Password is required.", true); return; }
         if (!ValidationUtil.isPasswordMatch(password, confirmPassword)) {
             showMessage("Passwords do not match or are too short (min 6 chars).", true); return;
         }
-        if (ValidationUtil.isNullOrEmpty(fullName)) { showMessage("Full name is required.", true); return; }
+        if (ValidationUtil.isNullOrEmpty(companyName)) { showMessage("Company name is required.", true); return; }
         if (!ValidationUtil.isValidEmail(email)) { showMessage("Please enter a valid email address.", true); return; }
-        if (!ValidationUtil.isValidPhone(phone)) { showMessage("Phone number format is invalid.", true); return; }
-        if (ValidationUtil.isNullOrEmpty(course)) { showMessage("Course/programme is required.", true); return; }
 
-        int year;
-        try {
-            year = Integer.parseInt(yearStr.trim());
-            if (!ValidationUtil.isValidYearOfStudy(year)) {
-                showMessage("Year of study must be between 1 and 7.", true); return;
-            }
-        } catch (NumberFormatException e) {
-            showMessage("Year of study must be a number.", true); return;
-        }
-
-        // Register user account and profile transactionally
         User user = new User();
         user.setUsername(username.trim());
         user.setPassword(password);
 
-        Student student = new Student();
-        student.setFullName(fullName.trim());
-        student.setEmail(email.trim());
-        student.setPhone(phone.trim());
-        student.setCourse(course.trim());
-        student.setYearOfStudy(year);
+        Employer employer = new Employer();
+        employer.setCompanyName(companyName.trim());
+        employer.setContactPerson(contactPerson.trim());
+        employer.setEmail(email.trim());
+        employer.setPhone(phone.trim());
+        employer.setAddress(address.trim());
 
-        if (authService.registerStudent(user, student)) {
+        if (authService.registerEmployer(user, employer)) {
             showMessage("Registration successful! Redirecting...", false);
-            // Navigate to StudentDashboard
             try {
                 Stage stage = (Stage) usernameField.getScene().getWindow();
-                FXMLLoader loader = new FXMLLoader(getClass().getResource("/fxml/StudentDashboard.fxml"));
+                FXMLLoader loader = new FXMLLoader(getClass().getResource("/fxml/EmployerDashboard.fxml"));
                 Scene scene = new Scene(loader.load(), 1100, 700);
-                scene.getStylesheets().add(
-                    Objects.requireNonNull(getClass().getResource("/css/styles.css")).toExternalForm()
-                );
+                scene.getStylesheets().add(Objects.requireNonNull(getClass().getResource("/css/styles.css")).toExternalForm());
                 stage.setScene(scene);
                 stage.setResizable(true);
                 stage.centerOnScreen();
             } catch (IOException e) {
                 showMessage("Registration successful! Please login.", false);
-                logger.error("Navigation error after registration: {}", e.getMessage(), e);
+                logger.error("Navigation error after employer registration", e);
             }
         } else {
             showMessage("Registration failed. Username might already exist or invalid data.", true);
@@ -113,14 +94,11 @@ public class RegisterController {
             Stage stage = (Stage) usernameField.getScene().getWindow();
             FXMLLoader loader = new FXMLLoader(getClass().getResource("/fxml/Login.fxml"));
             Scene scene = new Scene(loader.load(), 480, 600);
-            scene.getStylesheets().add(
-                Objects.requireNonNull(getClass().getResource("/css/styles.css")).toExternalForm()
-            );
+            scene.getStylesheets().add(Objects.requireNonNull(getClass().getResource("/css/styles.css")).toExternalForm());
             stage.setScene(scene);
-            stage.setResizable(false);
             stage.centerOnScreen();
         } catch (IOException e) {
-            logger.error("Navigation error back to login: {}", e.getMessage(), e);
+            logger.error("Navigation error back to login", e);
         }
     }
 

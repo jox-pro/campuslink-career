@@ -14,6 +14,7 @@
     <HBox spacing="10" alignment="CENTER_LEFT">
         <TextField fx:id="searchField" promptText="Search internships..." styleClass="search-field"
                    onAction="#handleSearch"/>
+        <ComboBox fx:id="filterStatus" promptText="All Status"/>
         <Button text="Search" styleClass="btn-secondary" onAction="#handleSearch"/>
         <Button text="Clear" styleClass="btn-secondary" onAction="#handleClearSearch"/>
         <Region HBox.hgrow="ALWAYS"/>

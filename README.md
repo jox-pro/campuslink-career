@@ -70,7 +70,13 @@ A professional Java desktop application for university career management, connec
 
 ### Default Credentials
 
-Default seed credentials are no longer embedded in the repository. Create a secure admin account during first launch or through the database.
+The following default administrator account is created during a fresh installation:
+
+| Role | Username | Password |
+|---|---|---|
+| Admin | admin | Admin@123 |
+
+**Note:** You will be prompted to change this password on your first login.
 
 ## Project Structure
 
