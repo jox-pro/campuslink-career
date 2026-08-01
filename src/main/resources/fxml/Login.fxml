@@ -27,10 +27,10 @@
                 <Separator/>
 
                 <Label text="Username" styleClass="form-label"/>
-                <TextField fx:id="usernameField" promptText="Enter your username"/>
+                <TextField fx:id="usernameField" promptText="Enter your username" styleClass="input-field"/>
 
                 <Label text="Password" styleClass="form-label"/>
-                <PasswordField fx:id="passwordField" promptText="Enter your password"/>
+                <PasswordField fx:id="passwordField" promptText="Enter your password" styleClass="input-field"/>
 
                 <Label fx:id="errorLabel" styleClass="error-label" wrapText="true" visible="false" managed="false"/>
 

@@ -1,113 +1,121 @@
 # CampusLink Career
 
-A professional Java desktop application for university career management, connecting students, employers, and administrators in one centralized platform.
+CampusLink Career is a Java 17 desktop application for university career management. It brings students, employers, and administrators together in one place for profiles, opportunities, applications, resources, and reporting.
 
-## Features
+## Quick start
 
-### For Students
+### 1. Prerequisites
 
-- Register and manage profile
-- Browse job and internship listings
-- Apply for opportunities
-- Track application status
-- Access career resources (CV guides, interview tips)
+- Java 17 or newer
+- Maven 3.8+ or the included Maven Wrapper
+- A MySQL-compatible server (recommended) or no database setup if you want the built-in H2 fallback
 
-### For Employers
+### 2. Clone and run
 
-- Post job and internship opportunities
-- Review applicants
-- Update application status (Pending, Reviewed, Shortlisted, Accepted, Rejected)
+```bash
+git clone https://github.com/jox-pro/campuslink-career
+cd campuslink-career
+```
 
-### For Administrators
+On Windows:
 
-- Manage all students, employers, and listings
-- Generate and export reports
-- Manage career resources
+```bat
+mvnw.cmd javafx:run
+```
 
-## Tech Stack
+macOS/Linux:
 
-| Technology       | Purpose                         |
-| ---------------- | ------------------------------- |
-| Java 17          | Core language                   |
-| JavaFX 21        | Desktop GUI framework           |
-| Maven            | Build and dependency management |
-| MySQL 8 / H2     | Relational database options     |
-| HikariCP         | Connection pooling              |
-| JDBC             | Database connectivity           |
-| BCrypt (jBCrypt) | Password hashing                |
+```bash
+./mvnw javafx:run
+```
 
-## Getting Started
+If you prefer a simple batch launcher on Windows, you can also run:
 
-### Prerequisites
+```bat
+run.bat
+```
 
-- Java 17+
-- Maven 3.8+
-- MySQL 8.0+
+### 3. Database setup (recommended)
 
-### Setup
+If you want to use MySQL instead of the built-in fallback, start your MySQL server and import the schema:
 
-1. Clone the repository:
+```bash
+mysql -u root -p < database/schema.sql
+```
 
-   ```bash
-   git clone https://github.com/jox-pro/campuslink-career
-   cd campuslink-career
-   ```
+Then copy the sample configuration file and update the values:
 
-2. Set up the database:
+```bash
+cp src/main/resources/db.properties.example src/main/resources/db.properties
+```
 
-   ```bash
-   mysql -u root -p < database/schema.sql
-   ```
+Example:
 
-3. Copy the sample properties file and configure database connection through environment variables or the copied file:
+```properties
+db.driver=com.mysql.cj.jdbc.Driver
+db.url=jdbc:mysql://localhost:3306/campuslink_career?useSSL=false&serverTimezone=UTC
+db.username=root
+db.password=yourpassword
+db.pool.size=10
+```
 
-   ```bash
-   cp src/main/resources/db.properties.example src/main/resources/db.properties
-   ```
+The app also reads the same values from environment variables: `DB_URL`, `DB_USERNAME`, `DB_PASSWORD`, and `DB_POOL_SIZE`.
 
-   ```properties
-   db.url=jdbc:mysql://localhost:3306/campuslink_career?useSSL=false&serverTimezone=UTC
-   db.username=root
-   db.password=yourpassword
-   db.pool.size=10
-   ```
+If no database configuration is supplied, the app falls back to an embedded H2 database for convenience.
 
-   The application also reads the same settings from environment variables `DB_URL`, `DB_USERNAME`, `DB_PASSWORD`, and `DB_POOL_SIZE`.
+### 4. Default login
 
-4. Run the application:
-   ```bash
-   mvn javafx:run
-   ```
-
-### Default Credentials
-
-The following default administrator account is created during a fresh installation:
+A default administrator account is created on first run:
 
 | Role  | Username | Password  |
 | ----- | -------- | --------- |
 | Admin | admin    | Admin@123 |
 
-**Note:** You will be prompted to change this password on your first login.
+You will be asked to change this password on first login.
 
-## Project Structure
+## Main features
 
+- Student registration and profile management
+- Job and internship browsing
+- Application tracking and status updates
+- Employer posting and applicant review
+- Admin reporting and resource management
+
+## Build, test, and package
+
+```bash
+./mvnw test
+./mvnw package
 ```
+
+On Windows, use `mvnw.cmd` instead of `./mvnw`.
+
+## Project structure
+
+```text
 src/main/java/com/campuslink/
-├── app/            Application entry point (Main.java)
+├── app/            Application entry point
 ├── controllers/    JavaFX UI controllers
 ├── dao/            Database access objects
-├── models/         Data model POJOs
-├── services/       Business logic layer
-└── utils/          Database, crypto, validation utilities
+├── models/         Data models
+├── services/       Business logic
+└── utils/          Database, validation, and security helpers
 
 src/main/resources/
-├── fxml/           FXML view files
 ├── css/            Stylesheets
-└── images/         Application icons
+├── fxml/           FXML screens
+├── db.properties.example  Sample database configuration
+└── logback.xml     Logging configuration
 
 database/
 └── schema.sql      MySQL setup script
 ```
+
+## Troubleshooting
+
+- If Maven cannot be found, install Maven or use the provided wrapper scripts.
+- If the database connection fails, check the values in `src/main/resources/db.properties`.
+- If you are using XAMPP or a local MySQL setup, ensure the server is running before launching the app.
 
 ## License
 
