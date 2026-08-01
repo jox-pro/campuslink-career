@@ -1,6 +1,8 @@
 package com.campuslink.app;
 
+import com.campuslink.utils.AppDataSource;
 import javafx.application.Application;
+import javafx.application.Platform;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Scene;
 import javafx.scene.image.Image;
@@ -33,6 +35,16 @@ public class Main extends Application {
         } catch (Exception ignored) {
             // Icon is optional
         }
+    }
+
+    @Override
+    public void stop() {
+        try {
+            AppDataSource.getInstance().shutdown();
+        } catch (Exception ignored) {
+            // ignore shutdown failures during exit
+        }
+        Platform.exit();
     }
 
     public static void main(String[] args) {

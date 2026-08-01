@@ -30,6 +30,16 @@ public class ValidationUtil {
     }
 
     public static boolean isPasswordMatch(String password, String confirm) {
-        return password != null && password.equals(confirm) && password.length() >= 6;
+        return password != null && password.equals(confirm) && isStrongPassword(password);
+    }
+
+    public static boolean isStrongPassword(String password) {
+        if (password == null || password.isBlank()) {
+            return false;
+        }
+        return password.length() >= 8
+            && password.matches(".*[A-Z].*")
+            && password.matches(".*[a-z].*")
+            && password.matches(".*\\d.*");
     }
 }

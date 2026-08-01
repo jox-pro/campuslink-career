@@ -12,6 +12,9 @@ import com.campuslink.utils.ValidationUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.StandardCopyOption;
 import java.time.LocalDate;
 import java.util.List;
 
@@ -143,30 +146,38 @@ public class StudentService {
 
     public boolean uploadCV(int studentId, java.io.File file) {
         Student student = studentDAO.findById(studentId);
-        if (student == null) return false;
+        if (student == null || file == null || !file.isFile()) return false;
         AuthorizationService.checkOwnership(student.getUserId());
 
         // Validation: max 5MB, PDF only
         if (file.length() > 5 * 1024 * 1024) return false;
         if (!file.getName().toLowerCase().endsWith(".pdf")) return false;
 
-        String storageDir = "storage/cvs/";
-        java.io.File dir = new java.io.File(storageDir);
-        if (!dir.exists()) dir.mkdirs();
+        Path storageDir = Path.of(System.getProperty("user.home"), ".campuslink-career", "storage", "cvs").toAbsolutePath().normalize();
+        try {
+            Files.createDirectories(storageDir);
+        } catch (java.io.IOException e) {
+            logger.error("Unable to create CV storage directory", e);
+            return false;
+        }
 
         String fileName = "cv_" + studentId + "_" + System.currentTimeMillis() + ".pdf";
-        java.io.File dest = new java.io.File(dir, fileName);
+        Path dest = storageDir.resolve(fileName);
 
         try {
-            java.nio.file.Files.copy(file.toPath(), dest.toPath(), java.nio.file.StandardCopyOption.REPLACE_EXISTING);
-            
+            Files.copy(file.toPath(), dest, StandardCopyOption.REPLACE_EXISTING);
+
             // Delete old CV if exists
             if (student.getCvPath() != null) {
-                java.io.File oldFile = new java.io.File(student.getCvPath());
-                if (oldFile.exists()) oldFile.delete();
+                try {
+                    Path oldFile = Path.of(student.getCvPath());
+                    Files.deleteIfExists(oldFile);
+                } catch (java.lang.Exception ignored) {
+                    // ignore cleanup errors
+                }
             }
 
-            student.setCvPath(dest.getAbsolutePath());
+            student.setCvPath(dest.toString());
             boolean updated = studentDAO.update(student);
             if (updated) {
                 auditLogDAO.insert("cv-upload", SessionManager.getInstance().getCurrentUser().getUsername(), "success", "CV uploaded: " + fileName);

@@ -62,6 +62,7 @@
             <Label text="To:"/>
             <DatePicker fx:id="endDate"/>
             <Button text="Export CSV" styleClass="btn-success" onAction="#handleExportCSV"/>
+            <Button text="Export PDF" styleClass="btn-secondary" onAction="#handleExportPDF"/>
         </HBox>
     </VBox>
 

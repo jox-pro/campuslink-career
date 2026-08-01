@@ -133,6 +133,29 @@ public class ReportController {
         }
     }
 
+    @FXML
+    private void handleExportPDF() {
+        FileChooser fileChooser = new FileChooser();
+        fileChooser.setTitle("Export Applications to PDF");
+        fileChooser.setInitialFileName("applications_report_" +
+                LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyyMMdd_HHmmss")) + ".txt");
+        fileChooser.getExtensionFilters().add(new FileChooser.ExtensionFilter("Text Files", "*.txt"));
+
+        Stage stage = (Stage) lblStudents.getScene().getWindow();
+        File file = fileChooser.showSaveDialog(stage);
+        if (file == null) return;
+
+        boolean success = reportService.exportApplicationsToPDF(file,
+                startDate != null ? startDate.getValue() : null,
+                endDate != null ? endDate.getValue() : null);
+        if (success) {
+            if (exportStatus != null) exportStatus.setText("PDF export created: " + file.getName());
+            showAlert(Alert.AlertType.INFORMATION, "Export Successful", "Applications export created.");
+        } else {
+            showAlert(Alert.AlertType.ERROR, "Export Failed", "Could not create the report export.");
+        }
+    }
+
     private void showAlert(Alert.AlertType type, String title, String content) {
         Alert alert = new Alert(type);
         alert.setTitle(title);

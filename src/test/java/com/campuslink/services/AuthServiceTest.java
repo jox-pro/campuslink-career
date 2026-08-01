@@ -122,11 +122,11 @@ class AuthServiceTest {
         when(userDAO.findByUsername("newstudent")).thenReturn(null);
         when(userDAO.create(any(User.class))).thenReturn(true);
 
-        User result = authService.register("newstudent", "plaintext-pw", "STUDENT");
+        User result = authService.register("newstudent", "PlaintextPw1", "STUDENT");
 
         assertNotNull(result);
-        assertNotEquals("plaintext-pw", result.getPassword(), "password must be hashed, never stored plain");
-        assertTrue(PasswordUtil.checkPassword("plaintext-pw", result.getPassword()));
+        assertNotEquals("PlaintextPw1", result.getPassword(), "password must be hashed, never stored plain");
+        assertTrue(PasswordUtil.checkPassword("PlaintextPw1", result.getPassword()));
         verify(auditLogDAO).insert(eq("register"), eq("newstudent"), eq("success"), anyString());
     }
 
@@ -134,9 +134,18 @@ class AuthServiceTest {
     void register_withExistingUsername_returnsNullWithoutCreating() {
         when(userDAO.findByUsername("existing")).thenReturn(new User(1, "existing", "hash", "STUDENT"));
 
-        User result = authService.register("existing", "whatever", "STUDENT");
+        User result = authService.register("existing", "StrongPass1", "STUDENT");
 
         assertNull(result);
         verify(userDAO, never()).create(any());
+    }
+
+    @Test
+    void register_withPasswordShorterThanEight_returnsNull() {
+        User result = authService.register("newstudent", "short", "STUDENT");
+
+        assertNull(result);
+        verify(userDAO, never()).create(any());
+        verify(auditLogDAO).insert(eq("register"), eq("newstudent"), eq("failure"), anyString());
     }
 }

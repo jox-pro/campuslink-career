@@ -5,6 +5,7 @@ A professional Java desktop application for university career management, connec
 ## Features
 
 ### For Students
+
 - Register and manage profile
 - Browse job and internship listings
 - Apply for opportunities
@@ -12,29 +13,33 @@ A professional Java desktop application for university career management, connec
 - Access career resources (CV guides, interview tips)
 
 ### For Employers
+
 - Post job and internship opportunities
 - Review applicants
 - Update application status (Pending, Reviewed, Shortlisted, Accepted, Rejected)
 
 ### For Administrators
+
 - Manage all students, employers, and listings
 - Generate and export reports
 - Manage career resources
 
 ## Tech Stack
 
-| Technology | Purpose |
-|---|---|
-| Java 17 | Core language |
-| JavaFX 17 | Desktop GUI framework |
-| Maven | Build and dependency management |
-| MySQL 8 | Relational database |
-| JDBC | Database connectivity |
-| BCrypt (jBCrypt) | Password hashing |
+| Technology       | Purpose                         |
+| ---------------- | ------------------------------- |
+| Java 17          | Core language                   |
+| JavaFX 21        | Desktop GUI framework           |
+| Maven            | Build and dependency management |
+| MySQL 8 / H2     | Relational database options     |
+| HikariCP         | Connection pooling              |
+| JDBC             | Database connectivity           |
+| BCrypt (jBCrypt) | Password hashing                |
 
 ## Getting Started
 
 ### Prerequisites
+
 - Java 17+
 - Maven 3.8+
 - MySQL 8.0+
@@ -42,26 +47,32 @@ A professional Java desktop application for university career management, connec
 ### Setup
 
 1. Clone the repository:
+
    ```bash
    git clone https://github.com/jox-pro/campuslink-career
    cd campuslink-career
    ```
 
 2. Set up the database:
+
    ```bash
    mysql -u root -p < database/schema.sql
    ```
 
 3. Copy the sample properties file and configure database connection through environment variables or the copied file:
+
    ```bash
    cp src/main/resources/db.properties.example src/main/resources/db.properties
    ```
+
    ```properties
    db.url=jdbc:mysql://localhost:3306/campuslink_career?useSSL=false&serverTimezone=UTC
    db.username=root
    db.password=yourpassword
+   db.pool.size=10
    ```
-   The application also reads the same settings from environment variables `DB_URL`, `DB_USERNAME`, and `DB_PASSWORD`.
+
+   The application also reads the same settings from environment variables `DB_URL`, `DB_USERNAME`, `DB_PASSWORD`, and `DB_POOL_SIZE`.
 
 4. Run the application:
    ```bash
@@ -72,9 +83,9 @@ A professional Java desktop application for university career management, connec
 
 The following default administrator account is created during a fresh installation:
 
-| Role | Username | Password |
-|---|---|---|
-| Admin | admin | Admin@123 |
+| Role  | Username | Password  |
+| ----- | -------- | --------- |
+| Admin | admin    | Admin@123 |
 
 **Note:** You will be prompted to change this password on your first login.
 

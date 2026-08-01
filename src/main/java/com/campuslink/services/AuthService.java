@@ -10,6 +10,7 @@ import com.campuslink.models.User;
 import com.campuslink.utils.AppDataSource;
 import com.campuslink.utils.PasswordUtil;
 import com.campuslink.utils.SessionManager;
+import com.campuslink.utils.ValidationUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -48,7 +49,11 @@ public class AuthService {
     }
 
     public User register(String username, String password, String role) {
-        if (username == null || username.trim().isEmpty() || password == null || password.isEmpty()) {
+        if (username == null || username.trim().isEmpty() || password == null || password.isBlank()) {
+            return null;
+        }
+        if (!ValidationUtil.isStrongPassword(password)) {
+            auditLogDAO.insert("register", username.trim(), "failure", "password-too-weak");
             return null;
         }
         if (!role.equals("ADMIN") && !role.equals("STUDENT") && !role.equals("EMPLOYER")) {

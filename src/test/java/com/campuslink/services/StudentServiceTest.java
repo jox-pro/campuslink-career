@@ -16,6 +16,9 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import java.io.File;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
@@ -138,5 +141,30 @@ class StudentServiceTest {
         when(applicationDAO.create(any(Application.class))).thenReturn(true);
 
         assertTrue(studentService.applyForOpportunity(7, "JOB", 42));
+    }
+
+    @Test
+    void uploadCV_copiesPdfToPortableDirectoryAndPersistsPath() throws Exception {
+        Student s = new Student();
+        s.setStudentId(7);
+        s.setUserId(101);
+        s.setCvPath(null);
+        when(studentDAO.findById(7)).thenReturn(s);
+        when(studentDAO.update(any(Student.class))).thenReturn(true);
+
+        Path tempPdf = Files.createTempFile("cv-test", ".pdf");
+        Files.writeString(tempPdf, "pdf-content");
+        File pdfFile = tempPdf.toFile();
+
+        boolean success = studentService.uploadCV(7, pdfFile);
+
+        assertTrue(success);
+        assertNotNull(s.getCvPath());
+        Path storedPath = Path.of(s.getCvPath());
+        assertTrue(storedPath.toAbsolutePath().startsWith(Path.of(System.getProperty("user.home"), ".campuslink-career", "storage", "cvs").toAbsolutePath()));
+        assertTrue(Files.exists(storedPath));
+        assertTrue(storedPath.getFileName().toString().endsWith(".pdf"));
+        Files.deleteIfExists(storedPath);
+        Files.deleteIfExists(tempPdf);
     }
 }
